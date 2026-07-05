@@ -1,0 +1,18 @@
+# Personal Specific Development Files
+RELEASE.MD
+DEVELOPMENT.MD
+
+
+
+# Python or Backend Related Files
+
+backend/.venv/
+backend/__pycache__/
+
+*.pyc
+*.pyo
+*.db
+backend/.env
+
+# Frontend Related Files
+frontend/node_modules/
