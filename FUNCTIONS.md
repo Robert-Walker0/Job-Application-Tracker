@@ -4,11 +4,11 @@ This is not a required document, this is a functionified version of in the proje
 
 ## React/Frontend
 
-App()
+~~App()~~
 - Main Application, holds everything
 
 ~~ApplicationForm()~~
-- Add form  for applications or editing
+- Add form for adding applications
 
 ~~FormInput()~~
 - Used for reusable input component for ApplicationForm
@@ -19,7 +19,7 @@ App()
 ApplicationLog()
 - Display the history log for a single application
 
-ApplicationList()
+~~ApplicationList()~~
 - Displays all applications
 
 ApplicationCard()
@@ -43,22 +43,31 @@ ImportButton()
 InactivityFlag()
 - Highlights flagged applications
 
+
+## Frontend Utils
+
+~~isInactiveJobApplication(applicationDate)~~
+- Checks if a job application has been inactive for 14 or more days
+
 ## Python/Backend
 
 ### Database
 
 ~~initialize_project_database()~~
-- Creates the main database for our project, this step/function has been completed/.
+- Creates the main database for our project, this step/function has been completed
+
+~~create_connection()~~
+- Creates a pre-configured connection for fast step up
 
 ### Applications
 
-~~add_application(company, job_title, date_applied, platform, link, pay_type, pay_amount, notes, status, last_heard_from)~~
+~~add_job_application(company, job_title, date_applied, platform, link, pay_type, pay_amount, notes, status, last_heard_from)~~
 - Insert a new application with the default status of Applied into the list
 
-~~get_all_applications()~~
+~~get_all_job_applications()~~
 - Returns all application from the database
 
-~~get_application_by_id(application_id)~~
+~~get_job_application_by_id(application_id)~~
 - Return a single application by id
 
 filter_applications()
