@@ -10,7 +10,7 @@ export default function ApplicationForm( {onSubmit, onClose}) {
     const [dateApplied, setDateApplied] = useState(today);
     const [platform, setPlatform] = useState("");
     const [link, setLink] = useState("");
-    const [payType, setPayType] = useState("");
+    const [payType, setPayType] = useState("Contract");
     const [payAmount, setPayAmount] = useState("");
     const [notes, setNotes] = useState("");
     const [status, setStatus] = useState("Applied");
