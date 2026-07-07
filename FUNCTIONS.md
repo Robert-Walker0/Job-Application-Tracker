@@ -52,13 +52,13 @@ InactivityFlag()
 
 ### Applications
 
-add_application(company, job_title, date_applied, platform, link, pay_type, pay_amount, notes, status, last_heard_from)
+~~add_application(company, job_title, date_applied, platform, link, pay_type, pay_amount, notes, status, last_heard_from)~~
 - Insert a new application with the default status of Applied into the list
 
-get_all_applications()
+~~get_all_applications()~~
 - Returns all application from the database
 
-get_application_by_id(application_id)
+~~get_application_by_id(application_id)~~
 - Return a single application by id
 
 filter_applications()
@@ -66,7 +66,6 @@ filter_applications()
 
 update_application(application_id, update_fields)
 - Update application fields if something actually changed
-
 
 flag_inactive_applications()
 - Flag all applications with applied status with no update in two weeks.
