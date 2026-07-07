@@ -1,6 +1,7 @@
 import { useState } from "react"
 import ApplicationForm from './components/ApplicationForm'
 import ApplicationList from './components/ApplicationList'
+import './App.css'
 
 function App() {
   const [showForm, setShowForm] = useState(false);
@@ -12,20 +13,31 @@ function App() {
   }
 
   return (
-    <div>
-      <h1>Job Application Tracker</h1>
-      <button onClick={() => setShowForm(!showForm)}>
-        Add Job
-      </button>
-      {showForm && 
-      <ApplicationForm
-        onSubmit={handleAddApplication}
-        onClose={() => setShowForm(false)}
-      />
-      }
-      <ApplicationList applications={applications} />    
+    <div className="app-container">
+
+        <div className="app-header">
+            <h1 className="app-title">Job Application Tracker</h1>
+        </div>
+
+        <div className="app-toolbar">
+            <button onClick={() => setShowForm(!showForm)}>
+                Add Job
+            </button>
+        </div>
+
+        {showForm && 
+            <ApplicationForm
+                onSubmit={handleAddApplication}
+                onClose={() => setShowForm(false)}
+            />
+        }
+
+        <div className="app-content">
+            <ApplicationList applications={applications} />
+        </div>
+
     </div>
-  )
+)
 }
 
 export default App;
