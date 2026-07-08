@@ -1,8 +1,9 @@
 import FormInput from './FormInput';
 import FormSelect from './FormSelect';
 import { useState } from "react";
+import './ApplicationForm.css';
 
-export default function ApplicationForm( {onSubmit, onClose}) {
+export default function ApplicationForm({ onSubmit, onClose }) {
     const today = new Intl.DateTimeFormat('en-CA').format(new Date());
 
     const [company, setCompany] = useState("");
@@ -29,7 +30,8 @@ export default function ApplicationForm( {onSubmit, onClose}) {
             payAmount,
             notes,
             status,
-            lastHeardFrom
+            lastHeardFrom,
+            notes
         }
 
         console.log(newApplication);
@@ -37,20 +39,36 @@ export default function ApplicationForm( {onSubmit, onClose}) {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <FormInput label="Company *" value={company} onChange={e => setCompany(e.target.value)} required/>
-            <FormInput label="Job Title *" value={jobTitle} onChange={e => setJobTitle(e.target.value)} required/>
-            <FormInput label="Date *" value={dateApplied} type="date" onChange={e => setDateApplied(e.target.value)} required/>
-            <FormInput label="Platform" value={platform} onChange={e => setPlatform(e.target.value)}/>
-            <FormInput label="Job Posting Link" value={link} type="url" onChange={e => setLink(e.target.value)}/>
-            <FormSelect label = "Pay Type *" value={payType} onChange={e => setPayType(e.target.value)} options={["Contract", "Hourly", "Salaried", "Internship"]} required/>
-            <FormInput label="Pay Amount *" value={payAmount} type="number" onChange={e => setPayAmount(e.target.value)} required/>
-            <label>Notes
-                <textarea placeholder="Place notes here" value={notes} onChange={e => setNotes(e.target.value)}/>
-            </label>
-            <FormInput label="Last Heard From" value={lastHeardFrom} type="date" onChange={e => setLastHeardFrom(e.target.value)}/>
-            <button type="submit">Add Application</button>
-            <button type="button" onClick={onClose}>Cancel</button>
-        </form>
-    )
+    <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-box" onClick={e => e.stopPropagation()}>
+
+            <div className="modal-header">
+                <h2>Add Job Application</h2>
+                <button className="modal-close-button" onClick={onClose}>✕</button>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+                <FormInput label="Company *" value={company} onChange={e => setCompany(e.target.value)} required/>
+                <FormInput label="Job Title *" value={jobTitle} onChange={e => setJobTitle(e.target.value)} required/>
+                <FormInput label="Date Applied *" value={dateApplied} type="date" onChange={e => setDateApplied(e.target.value)} required/>
+                <FormInput label="Platform" value={platform} onChange={e => setPlatform(e.target.value)}/>
+                <FormInput label="Job Posting Link" value={link} type="url" onChange={e => setLink(e.target.value)}/>
+                <FormSelect label="Pay Type *" value={payType} onChange={e => setPayType(e.target.value)} options={["Contract", "Hourly", "Salaried", "Internship"]} required/>
+                <FormInput label="Pay Amount *" value={payAmount} type="number" onChange={e => setPayAmount(e.target.value)} required/>
+                <FormInput label="Last Heard From" value={lastHeardFrom} type="date" onChange={e => setLastHeardFrom(e.target.value)}/>
+
+                <div className="form-field">
+                    <label>Notes</label>
+                    <textarea placeholder="Place notes here" value={notes} onChange={e => setNotes(e.target.value)}/>
+                </div>
+
+                <div className="form-buttons">
+                    <button type="button" className="button-cancel" onClick={onClose}>Cancel</button>
+                    <button type="submit" className="button-submit">Add Application</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+)
 }
