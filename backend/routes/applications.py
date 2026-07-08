@@ -40,5 +40,5 @@ def create_application(application: JobApplication) -> dict:
             ))
         return {"message": "Application has been added successfully."}
     except RuntimeError as error:
-        HTTPException(status_code=404, detail=str(error))
+        raise HTTPException(status_code=404, detail=str(error))
 
