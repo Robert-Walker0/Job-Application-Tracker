@@ -1,0 +1,44 @@
+from fastapi import APIRouter, HTTPException
+from database import add_job_application, get_all_job_applications, get_job_application_by_id
+from utility_functions import convert_keys
+from models import JobApplication
+
+router = APIRouter()
+
+@router.get("/")
+def root() -> dict:
+    return {"message": "Job Application Tracker API"}
+
+
+@router.get("/applications/{application_id}")
+def get_application(application_id: int) -> dict:
+    try:
+        return get_job_application_by_id(application_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"Application {application_id} not found")
+
+@router.get("/applications")
+def get_applications() -> list:
+    applications = get_all_job_applications()
+    return [convert_keys(app) for app in applications]
+
+
+@router.post("/applications")
+def create_application(application: JobApplication) -> dict:
+    try:
+        add_job_application((
+                application.company,
+                application.job_title,
+                application.date_applied,
+                application.platform,
+                application.link,
+                application.pay_type,
+                application.pay_amount,
+                application.notes,
+                application.status,
+                application.last_heard_from
+            ))
+        return {"message": "Application has been added successfully."}
+    except RuntimeError as error:
+        HTTPException(status_code=404, detail=str(error))
+
