@@ -54,7 +54,7 @@ def test_create_application_invalid_data_type(application_payload):
 
 def test_get_application(application_payload):
     create_response = client.post(APPLICATIONS_URL, json=application_payload)  
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
     all_response = client.get(APPLICATIONS_URL)
     assert all_response.status_code == 200
     applications = all_response.json()
