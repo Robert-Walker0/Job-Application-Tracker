@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react"
 import ApplicationForm from './components/ApplicationForm'
 import ApplicationList from './components/ApplicationList'
+import API_BASE_URL from "./config"
 import './App.css'
 
 
 function App() {
   const [showForm, setShowForm] = useState(false);
   const [applications, setApplications] = useState([]);
-  const localDBApplications = "http://localhost:8000/applications";
+  const localDBApplications = `${API_BASE_URL/applications}`;
 
   useEffect(() => {
     fetch(localDBApplications)
