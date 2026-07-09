@@ -1,10 +1,19 @@
 import pytest
 from fastapi.testclient import TestClient
+import database
 from main import app
 
 client = TestClient(app)
 ROOT_URL = "/"
 APPLICATIONS_URL = "/applications"
+
+@pytest.fixture(autouse=True)
+def setup_database(tmp_path, monkeypatch):
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(database, "DATABASE_PATH", str(db_path))
+    database.initialize_project_databases()
+    yield
+
 
 @pytest.fixture
 def application_payload():
