@@ -8,6 +8,7 @@ backend/job_application_tracker_table.db
 
 __pycache__/
 .pytest_cache/
+*.env
 *.pyc
 *.pyo
 *.db
