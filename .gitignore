@@ -2,17 +2,12 @@
 RELEASE.MD
 DEVELOPMENT.MD
 
-
-
 # Python or Backend Related Files
-
 backend/.venv/
-backend/__pycache__/
-backend/tests/__init__.py
-backend/tests/__pycache__
-backend/tests/.pytest_cache
 backend/job_application_tracker_table.db
 
+__pycache__/
+.pytest_cache/
 *.pyc
 *.pyo
 *.db
@@ -20,3 +15,4 @@ backend/.env
 
 # Frontend Related Files
 frontend/node_modules/
+frontend/dists/
