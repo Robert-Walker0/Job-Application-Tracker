@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import JSONResponse
 from database import add_job_application, get_all_job_applications, get_job_application_by_id
 from utility_functions import convert_keys
 from models import JobApplication
@@ -37,8 +38,11 @@ def create_application(application: JobApplication) -> dict:
                 application.notes,
                 application.status,
                 application.last_heard_from
-            ))
-        return {"message": "Application has been added successfully."}
+            ))      
     except RuntimeError as error:
-        raise HTTPException(status_code=404, detail=str(error))
-
+        raise HTTPException(status_code=500, detail=str(error))
+    
+    return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content={"message": "Application has been added successfully."}
+        )
