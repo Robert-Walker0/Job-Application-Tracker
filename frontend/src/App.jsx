@@ -8,7 +8,7 @@ import './App.css'
 function App() {
   const [showForm, setShowForm] = useState(false);
   const [applications, setApplications] = useState([]);
-  const localDBApplications = `${API_BASE_URL/applications}`;
+  const localDBApplications = `${API_BASE_URL}/applications`;
 
   useEffect(() => {
     fetch(localDBApplications)
