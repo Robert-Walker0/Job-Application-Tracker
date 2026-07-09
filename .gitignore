@@ -8,6 +8,10 @@ DEVELOPMENT.MD
 
 backend/.venv/
 backend/__pycache__/
+backend/tests/__init__.py
+backend/tests/__pycache__
+backend/tests/.pytest_cache
+backend/job_application_tracker_table.db
 
 *.pyc
 *.pyo
