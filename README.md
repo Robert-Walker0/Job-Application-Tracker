@@ -26,42 +26,76 @@ Just take note of the company, role, date, hourly or salaried, last heard from, 
 
 ## The Process
 
-This project started as a personal need: a way to keep track of job 
-applications during an active job search, after struggling to remember 
-where I had applied and what the current status of each application was.
+This project started as a personal need: a way to keep track of the job
+applications during an active job search, after struggling to remember
+where I had applied and the current status of each application.
 
-Before writing any code, the project was planned using a set of 
-development documents. FUNCTIONS.md became the most useful of these, 
-breaking the entire project down into named functions across the frontend 
-and backend before a single line of code was written. This gave a clear 
+Before writing any code, the project was planned using a set of
+development documents. FUNCTIONS.md became the most useful of these,
+breaking the entire project down into named functions across the frontend
+and backend before a single line of code was written. This gave a clear
 picture of exactly what needed to be built and in what order.
 
-The database schema went through an important evolution during planning. 
-Originally designed with two tables in mind, the need to track status 
-changes over time led to the addition of a third — the application 
-history log. The final schema consists of three tables: job_applications, 
+The database schema went through an important evolution during planning.
+Originally designed with two tables in mind, the need to track status
+changes over time led to the addition of a third — the application
+history log. The final schema consists of three tables: job_applications,
 interview_rounds, and job_application_log.
 
-The project was built in this order: problem definition, function 
-breakdown, schema design, database implementation, frontend components, 
+The project was built in this order: problem definition, function
+breakdown, schema design, database implementation, frontend components,
 styling, then backend query functions.
 
-Starting on the database side, the schema was created and the core 
-initialization function was built to set up all three tables on startup.
+Starting on the database side, the schema was created, and the core
+An initialization function was built to set up all three tables on startup.
 
-With the database foundation in place, the main React components were 
-developed: ApplicationForm for submitting new applications, 
-ApplicationList for displaying them, and FormInput and FormSelect as 
-reusable form elements used throughout the project.
+With the database foundation in place, the main React components were
+developed: ApplicationForm for submitting new applications,
+ApplicationList for displaying them, and FormInput and FormSelect as
+Reusable form elements used throughout the project.
 
-During this time, database.py was expanded with query functions for 
-adding applications, retrieving by ID, and fetching all applications, 
-along with a connection helper to standardize database access across 
+During this time, database.py was expanded with query functions for
+adding applications, retrieving by ID, and fetching all applications,
+along with a connection helper to standardize database access across
 all functions.
 
-As for now, the UI was styled to match a dark theme with full-width 
-headers, a toolbar, and a formatted data table. It was tweaked until all 
+The User Interface was styled to match a dark theme with full-width
+headers, a toolbar, and a formatted data table. It was tweaked until all
 data displayed correctly and the application felt genuinely usable.
+
+The next step after this was developing the FastAPI backend for the application. During this, the routes for retrieving all applications, retrieving by ID, and creating a new application were developed. A Pydantic model was added to handle the data collected for the JobApplication, alongside two utility functions. The most important one, to_camel_case, used an alias generator to accept camelCase field names from React and map them to Python snake case conventions.
+
+CORS middleware was configured to allow the React frontend to communicate with the FastAPI backend both locally and in production on Render. Configuring CORS between the deployment frontend and backend proved to be the most challenging for me, with me receiving environment variable errors, URL mismatches, and reordering the application before GitHub tests passed. Multiple commits and pull requests were needed to fix this issue alone.
+
+With the core functionality working end-to-end, a Pytest suite was written
+to cover the database functions, API routes, and utility functions. Tests
+were written for both happy paths and error cases. Including missing
+required fields, invalid data types, and non-existent IDs. A GitHub
+Actions workflow was added to run the full test suite automatically on
+every push and pull request to main.
+
+The application was then deployed to Render using two separate services:
+a web service for the FastAPI backend and a static site for the React
+frontend.
+
+Environment variables were used to manage the frontend and
+backend URLs across local development and production without hardcoding
+any values.
+
+Finally, for now, an export feature was added, allowing users to download all their
+tracked applications as a JSON file — an important addition given that
+Render’s free tier uses ephemeral storage, meaning the database resets on
+each cold start. The export feature gives users a way to preserve their
+data between sessions.
+
+
+## Planned Features
+- Import from JSON to restore exported data
+- ApplicationCard for viewing full application details
+- Application history log display
+- Interview round tracking
+- Edit existing applications
+- Customizable color schema settings
 
 ## What I Learned
 
