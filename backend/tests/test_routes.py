@@ -18,7 +18,6 @@ def setup_database(tmp_path, monkeypatch):
     database.initialize_project_databases()
     yield
 
-
 @pytest.fixture
 def application_payload():
     return {
@@ -87,4 +86,27 @@ def test_get_application_invalid_id_type():
     assert response.status_code == 422
 
 
+def test_export_applications_json_success(monkeypatch):
+    """Test that exporting data returns the correct headers and data payload."""
+    mock_data = [
+        {"id": 1, "company_name": "Google", "job_title": "Software Engineer"}
+    ]
+    monkeypatch.setattr("routes.applications.get_all_job_applications", lambda: mock_data)
+    monkeypatch.setattr("routes.applications.convert_keys", lambda x: x)
+    filename = "my_custom_backup"
+    response = client.get(f"/applications/export/json?filename={filename}")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"   
+    assert response.headers["content-disposition"] == f'attachment; filename="{filename}.json"' or \
+           response.headers["content-disposition"] == f'attachment; filename={filename}.json'
+    json_data = response.json()
+    assert len(json_data) == 1
+    assert json_data[0]["company_name"] == "Google"
 
+
+def test_export_applications_json_empty_database(monkeypatch):
+    """Test that a 404 is raised with a clear message when no jobs exist."""
+    monkeypatch.setattr("routes.applications.get_all_job_applications", lambda: [])
+    response = client.get("/applications/export/json")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "No job applications found to export."
