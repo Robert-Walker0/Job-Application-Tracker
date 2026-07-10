@@ -24,6 +24,36 @@ def get_applications() -> list:
     return [convert_keys(app) for app in applications]
 
 
+@router.get("/applications/export/json")
+def export_applications_json(filename: str = "job_applications"):
+    try:
+        job_applications = get_all_job_applications()
+        if not job_applications: raise ValueError("The database is empty.")
+        list_of_job_applications = [convert_keys(app) for app in job_applications]
+        safe_filename = filename if filename.endswith(".json") else f"{filename}.json"
+
+        return JSONResponse(
+            content=list_of_job_applications,
+            headers={
+                "Content-Disposition": f"attachment; filename={safe_filename}"
+            }
+        )
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No job applications found to export."
+        )
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=f"Export failed: {str(error)}"
+        )
+
+@router.get("/applications/export/csv")
+def export_applications_csv():
+    pass
+
+
 @router.post("/applications")
 def create_application(application: JobApplication) -> dict:
     try:
