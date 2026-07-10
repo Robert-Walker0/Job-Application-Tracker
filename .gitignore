@@ -1,7 +1,3 @@
-# Personal Specific Development Files
-RELEASE.MD
-DEVELOPMENT.MD
-
 # Python or Backend Related Files
 backend/.venv/
 backend/job_application_tracker_table.db
