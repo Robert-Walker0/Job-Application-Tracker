@@ -69,40 +69,40 @@ Sample text goes here
 
 ## Running the Project 
 
+### Requirements
+
+Ensure you have Node.js and Python 3.11 or higher installed before proceeding.
+
 
 ### Locally
 
-#### Frontend
+You need to setup both the backend and frontend server for both of them to work properly.
 
-1. Download the project onto your computer
-2. Extract the project
-3. Run the following commands below
+**Backend**:
+```bash
+cd backend
+python -m venv .venv
+# Window command: .venv\Scripts\activate
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+**Frontend**:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-
-### Backend
-
-1. Download the project onto your computer
-2. Extract the project
-3. Run the following commands below
-
-```bash
-cd  backend
-python -m venv .venv
-source .venv/bin/activate # On Windows use: .venv\Scripts\activate
-pip install -r requirements.txt
-python database.py
-```
-
-
+Then open http://localhost:5173 in your browser.
 
 ### Remote
+The application is currently live at:
+- Frontend: https://job-application-tracker-front.onrender.com
+- Backend API: https://job-application-tracker-mxlz.onrender.com/docs
 
-Sample text goes here
+Note: The free tier hosting may take 30-60 seconds to wake up on first visit.
 
 ## Video
 
