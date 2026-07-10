@@ -1,6 +1,8 @@
 import os
-from origins import get_frontend_remote_origin
 from dotenv import load_dotenv
+load_dotenv()
+
+from origins import get_frontend_remote_origin
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -14,7 +16,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-load_dotenv()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

@@ -1,4 +1,7 @@
-import pytest
+import pytest, os
+
+os.environ["FRONTEND_REMOTE_URL"] = "https://www.example.com"
+
 from fastapi.testclient import TestClient
 import database
 from main import app
@@ -6,6 +9,7 @@ from main import app
 client = TestClient(app)
 ROOT_URL = "/"
 APPLICATIONS_URL = "/applications"
+
 
 @pytest.fixture(autouse=True)
 def setup_database(tmp_path, monkeypatch):
