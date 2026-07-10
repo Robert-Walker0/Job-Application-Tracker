@@ -17,7 +17,7 @@ Just take note of the company, role, date, hourly or salaried, last heard from, 
 
 ## Features
 
-- Log job applications with company, role, date, platform, link and more.
+- Log job applications with company, role, apply date, pay type, pay amount, link, platform, last heard from, and notes
 - Track application status: Applied, Phone Screen, Interview, Offer, Rejected, Withdrawn
 - Applications flagged automatically after 2 weeks of no response
 - Track interview rounds per application with custom labels
