@@ -104,5 +104,5 @@ def test_export_applications_json_empty_database(monkeypatch):
     """Test that a 404 is raised with a clear message when no jobs exist."""
     monkeypatch.setattr("routes.applications.get_all_job_applications", lambda: [])
     response = client.get("/applications/export/json")
-    assert response.status_code == 400
+    assert response.status_code == 404
     assert response.json()["detail"] == "No job applications found to export."
