@@ -90,8 +90,6 @@ data between sessions.
 
 
 ## Planned Features
-- Import from JSON to restore exported data
-- ApplicationCard for viewing full application details
 - Application history log display
 - Interview round tracking
 - Edit existing applications
