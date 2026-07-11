@@ -53,3 +53,23 @@
     color: #888;
     padding: 2rem;
 }
+
+
+.application-table-row {
+    transition: background-color 0.2s ease, border-left 0.2s ease;
+    border-left: 4px solid transparent;
+}
+
+
+.application-table-row.highlight-inactive {
+    background-color: rgba(217, 119, 6, 0.25) !important; 
+    border-left: 4px solid #d97706 !important; 
+}
+
+.application-table-row.highlight-inactive td {
+    color: #fef3c7; 
+}
+
+.application-table-row.highlight-inactive:hover {
+    background-color: rgba(217, 119, 6, 0.4) !important;
+}
