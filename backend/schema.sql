@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS job_application_log(
     id INTEGER PRIMARY KEY,
     application_id INTEGER NOT NULL,
     log_date TEXT NOT NULL,
+    log_time TEXT NOT NULL,
     event TEXT NOT NULL,
     FOREIGN KEY (application_id) REFERENCES job_applications(id)
 );
