@@ -10,7 +10,7 @@ from main import app
 client = TestClient(app)
 ROOT_URL = "/"
 APPLICATIONS_URL = "/applications"
-
+EXPORT_URL = "/applications/export/json"
 IMPORT_URL = "/applications/import/json"
 
 
@@ -125,7 +125,7 @@ def test_export_applications_json_success(monkeypatch):
     monkeypatch.setattr("routes.applications.database.get_all_job_applications", lambda: mock_data)
     monkeypatch.setattr("routes.applications.to_camel_case_dict", lambda x: x)
     filename = "my_custom_backup"
-    response = client.get(f"/applications/export/json?filename={filename}")
+    response = client.get(f"{EXPORT_URL}?filename={filename}")
     assert response.status_code == status.HTTP_200_OK
     assert response.headers["content-type"] == "application/json"   
     assert response.headers["content-disposition"] == f'attachment; filename="{filename}.json"' or \
@@ -138,7 +138,7 @@ def test_export_applications_json_success(monkeypatch):
 def test_export_applications_json_empty_database(monkeypatch):
     """Test that a 404 is raised with a clear message when no jobs exist."""
     monkeypatch.setattr("routes.applications.database.get_all_job_applications", lambda: [])
-    response = client.get("/applications/export/json")
+    response = client.get(EXPORT_URL)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "No job applications found to export."
 
