@@ -1,0 +1,109 @@
+.card-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.card-box {
+    background-color: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    width: 550px;
+    max-height: 85vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #0f3460;
+}
+
+.card-header h2 {
+    color: #ffffff;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.card-close-button {
+    background: none;
+    border: none;
+    color: #e0e0e0;
+    font-size: 1.25rem;
+    cursor: pointer;
+}
+
+.card-close-button:hover {
+    color: #ffffff;
+}
+
+.card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.card-field {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.card-label {
+    color: #a0aec0;
+    font-size: 0.85rem;
+    width: 130px;
+    flex-shrink: 0;
+}
+
+.card-value {
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    word-break: break-word;
+}
+
+.card-value a {
+    color: #a78bfa;
+    text-decoration: none;
+}
+
+.card-value a:hover {
+    text-decoration: underline;
+}
+
+.card-notes .card-value {
+    white-space: pre-wrap;
+}
+
+.card-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #0f3460;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.card-close-btn {
+    background-color: #0f3460;
+    color: #e0e0e0;
+    border: 1px solid #533483;
+    border-radius: 4px;
+    padding: 0.5rem 1.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.card-close-btn:hover {
+    background-color: #16213e;
+}
