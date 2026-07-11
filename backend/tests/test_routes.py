@@ -3,12 +3,42 @@ import pytest, os
 os.environ["FRONTEND_REMOTE_URL"] = "https://www.example.com"
 
 from fastapi.testclient import TestClient
-import database
+import database, json, io
 from main import app
 
 client = TestClient(app)
 ROOT_URL = "/"
 APPLICATIONS_URL = "/applications"
+
+IMPORT_URL = "/applications/import/json"
+
+
+VALID_APPLICATIONS = [
+    {
+        "company": "Google",
+        "jobTitle": "Software Engineer",
+        "dateApplied": "2026-07-07",
+        "platform": "LinkedIn",
+        "link": "https://google.com",
+        "payType": "Salaried",
+        "payAmount": 120000,
+        "notes": "Great opportunity",
+        "status": "Applied",
+        "lastHeardFrom": "2026-07-07"
+    },
+    {
+        "company": "Affirm",
+        "jobTitle": "Apprentice Engineer",
+        "dateApplied": "2026-07-08",
+        "platform": "Company Website",
+        "link": "https://affirm.com",
+        "payType": "Salaried",
+        "payAmount": 95000,
+        "notes": "",
+        "status": "Applied",
+        "lastHeardFrom": "2026-07-08"
+    }
+]
 
 
 @pytest.fixture(autouse=True)
@@ -110,3 +140,77 @@ def test_export_applications_json_empty_database(monkeypatch):
     response = client.get("/applications/export/json")
     assert response.status_code == 404
     assert response.json()["detail"] == "No job applications found to export."
+
+def make_json_file(data, filename="applications.json"):
+    """Helper that creates an in-memory JSON file for upload testing."""
+    content = json.dumps(data).encode("utf-8")
+    return {"file": (filename, io.BytesIO(content), "application/json")}
+
+
+def test_import_valid_json_file():
+    response = client.post(IMPORT_URL, files=make_json_file(VALID_APPLICATIONS))
+    assert response.status_code == 201
+    assert response.json()["message"] == "Import complete. 2 imported, 0 failed."
+
+
+def test_import_verifies_data_in_database():
+    client.post(IMPORT_URL, files=make_json_file(VALID_APPLICATIONS))
+    applications = database.get_all_job_applications()
+    assert len(applications) == 2
+    assert applications[0]["company"] == "Google"
+    assert applications[1]["company"] == "Affirm"
+
+
+def test_import_invalid_file_type():
+    content = b"company,job_title\nGoogle,Engineer"
+    response = client.post(IMPORT_URL, files={
+        "file": ("applications.csv", io.BytesIO(content), "text/csv")
+    })
+    assert response.status_code == 400
+    assert "Only .json files are accepted" in response.json()["detail"]
+
+
+def test_import_invalid_json():
+    content = b"this is not valid json {"
+    response = client.post(IMPORT_URL, files={
+        "file": ("applications.json", io.BytesIO(content), "application/json")
+    })
+    assert response.status_code == 400
+    assert "Invalid JSON file" in response.json()["detail"]
+
+
+def test_import_wrong_structure():
+    content = json.dumps({"company": "Google"}).encode("utf-8")
+    response = client.post(IMPORT_URL, files={
+        "file": ("applications.json", io.BytesIO(content), "application/json")
+    })
+    assert response.status_code == 400
+    assert "Expected a list" in response.json()["detail"]
+
+
+def test_import_empty_list():
+    response = client.post(IMPORT_URL, files=make_json_file([]))
+    assert response.status_code == 201
+    assert response.json()["message"] == "Import complete. 0 imported, 0 failed."
+
+
+def test_import_partial_failure():
+    mixed_data = [
+        VALID_APPLICATIONS[0],
+        {
+            "company": None,
+            "job_title": None,
+            "date_applied": None,
+            "platform": None,
+            "link": None,
+            "pay_type": "InvalidType",
+            "pay_amount": None,
+            "notes": None,
+            "status": None,
+            "last_heard_from": None
+        }
+    ]
+    response = client.post(IMPORT_URL, files=make_json_file(mixed_data))
+    assert response.status_code == 201
+    assert "1 imported" in response.json()["message"]
+    assert "1 failed" in response.json()["message"]
