@@ -29,6 +29,7 @@ export default function ApplicationList({ applications }) {
                             <tr
                                 key={application.id}
                                 onClick={() => setSelectedApplication(application)}
+                                className={`application-table-row ${application.isInactive ? "highlight-inactive" : ""}`}
                                 style={{ cursor: "pointer" }}
                             >
                                 <td>{application.company}</td>

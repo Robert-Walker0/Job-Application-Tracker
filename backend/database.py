@@ -104,7 +104,7 @@ def get_job_application_by_id(application_id: int) -> dict:
     
     
 def get_all_job_applications() -> list:
-    """Retrieves all of the job applications from the database.
+    """Retrieves all of the job applications from the database and dynamically flags inactive ones using SQLite dae arithmetic.
 
     Returns:
         job_applications: A list of all job applications as dictionary,
@@ -113,18 +113,55 @@ def get_all_job_applications() -> list:
     Raises:
         RunTimeError: If the database query fails
     """
-
-    job_collection_query = "SELECT * FROM job_applications"
+    query = """
+    SELECT *, 
+           CASE 
+               WHEN status = 'Applied' AND (julianday('now') - julianday(date_applied)) >= 14 
+               THEN 1 
+               ELSE 0 
+           END as is_inactive
+    FROM job_applications
+    """
     con = create_connection()
     try:
-        cursor = con.execute(job_collection_query)
-        job_applications = [dict(row) for row in cursor.fetchall()]
+        cursor = con.execute(query)
+        applications = [dict(row) for row in cursor.fetchall()]
     except sqlite3.Error as error:
-        raise RuntimeError(f"Failed to retrieve job applications due to {error}.")
+        raise RuntimeError(f"Failed to fetch applications: {error}")
+    finally:
+        con.close()
+        
+    return applications
+
+
+def get_application_logs(application_id: int) -> list:
+    """Retrieves all history logs for a specific application, ordered oldest to newest.
+
+    Args:
+        application_id: The unique ID (int) of the application whose logs to fetch.
+
+    Returns:
+        logs: A list of dictionaries containing 'log_date' and 'event' keys.
+
+    Raises:
+        RuntimeError: If the database query fails.
+    """
+    log_query = """
+    SELECT log_date, log_time, event 
+    FROM job_application_log 
+    WHERE application_id = ? 
+    ORDER BY datetime(log_date || ' ' || log_time) ASC
+    """
+    con = create_connection()
+    try:
+        cursor = con.execute(log_query, (application_id,))
+        logs = [dict(row) for row in cursor.fetchall()]
+    except sqlite3.Error as error:
+        raise RuntimeError(f"Failed to retrieve logs for application {application_id} due to {error}.")
     finally:
         con.close()
     
-    return job_applications
+    return logs
 
 
 def get_application_logs(application_id: int) -> list:
