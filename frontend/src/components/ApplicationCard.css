@@ -17,9 +17,9 @@
     border-radius: 8px;
     width: 550px;
     max-height: 85vh;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* Keeps the outer rectangle shape perfectly rigid */
 }
 
 .card-header {
@@ -28,6 +28,7 @@
     align-items: center;
     padding: 1.25rem 1.5rem;
     border-bottom: 1px solid #0f3460;
+    flex-shrink: 0; /* Prevents header from shrinking */
 }
 
 .card-header h2 {
@@ -53,6 +54,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    overflow-y: auto; /* The scrollbar lives inside here if content gets too long */
 }
 
 .card-field {
@@ -92,6 +94,7 @@
     border-top: 1px solid #0f3460;
     display: flex;
     justify-content: flex-end;
+    flex-shrink: 0; /* Prevents footer from shrinking */
 }
 
 .card-close-btn {
@@ -106,4 +109,69 @@
 
 .card-close-btn:hover {
     background-color: #16213e;
+}
+
+/* --- Application History Timeline --- */
+
+.card-history-section {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #0f3460;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.history-title {
+    color: #ffffff;
+    font-size: 0.95rem;
+    margin: 0 0 0.75rem 0;
+}
+
+.history-status-text,
+.no-history-msg {
+    color: #a0aec0;
+    font-size: 0.85rem;
+    font-style: italic;
+    margin: 0;
+}
+
+.history-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-left: 0.75rem;
+    border-left: 2px solid #0f3460;
+    margin-left: 0.25rem;
+}
+
+.history-timeline-item {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+}
+
+.history-timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -15px; 
+    top: 5px;
+    width: 6px;
+    height: 6px;
+    background-color: #a78bfa;
+    border-radius: 50%;
+}
+
+.history-item-date {
+    color: #a0aec0;
+    font-size: 0.8rem;
+    width: 100px;
+    flex-shrink: 0;
+}
+
+.history-item-event {
+    color: #e0e0e0;
+    font-size: 0.85rem;
+    word-break: break-word;
+    flex-grow: 1;
 }

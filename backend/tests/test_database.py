@@ -44,6 +44,12 @@ def test_add_job_application(test_database):
     applications = database.get_all_job_applications()
     assert len(applications) == 1
     assert applications[0]["company"] == "Test Company"
+    first_id = applications[0]["id"]
+    logs = database.get_application_logs(first_id)
+    assert len(logs) == 1
+    assert "Application submitted" in logs[0]["event"]
+    assert "log_date" in logs[0]
+    assert "log_time" in logs[0]
 
 def test_get_job_application_by_id(test_database):
     database.add_job_application(APPLICATION_DATA)
@@ -70,6 +76,16 @@ def test_get_all_job_applications(test_database):
 def test_get_all_job_applications_empty(test_database):
     applications = database.get_all_job_applications()
     assert applications == []
+
+def test_get_application_logs(test_database):
+    database.add_job_application(APPLICATION_DATA)
+    applications = database.get_all_job_applications()
+    first_id = applications[0]["id"]
+    
+    logs = database.get_application_logs(first_id)
+    assert isinstance(logs, list)
+    assert len(logs) == 1
+    assert logs[0]["event"] == "Application submitted for Software Engineer at Test Company."
 
 def test_add_job_application_empty_required_field(test_database):
     with pytest.raises(Exception):

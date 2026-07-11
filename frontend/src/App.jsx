@@ -24,6 +24,10 @@ function App() {
         body: JSON.stringify(newApplication)
     });
 
+    if (!response.ok) {
+        throw new Error("Network response was not ok");
+    }
+
     if(response.ok) {
        fetch(localDBApplications)
         .then(res => res.json())
