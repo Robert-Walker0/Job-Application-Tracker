@@ -8,6 +8,7 @@ import './App.css'
 function App() {
   const [showForm, setShowForm] = useState(false);
   const [applications, setApplications] = useState([]);
+  const [importMessage, setImportMessage] = useState("");
   const localDBApplications = `${API_BASE_URL}/applications`;
 
   useEffect(() => {
@@ -24,10 +25,10 @@ function App() {
     });
 
     if(response.ok) {
-        const data = await response.json();
-        console.log(data);
-        setApplications(previousJobApplication => [...previousJobApplication, newApplication]);
-        setShowForm(false);
+       fetch(localDBApplications)
+        .then(res => res.json())
+        .then(data => setApplications(data));
+       setShowForm(false);
     }
   }
 
@@ -41,6 +42,36 @@ function App() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);  
+    }
+    
+    async function handleImportJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/applications/import/json`, {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setImportMessage(data.message);
+                // Refresh the applications list after import
+                fetch(localDBApplications)
+                    .then(res => res.json())
+                    .then(data => setApplications(data));
+            } else {
+                setImportMessage(data.detail);
+            }
+        } catch (error) {
+            setImportMessage("Import failed. Please try again.");
+        }
+        event.target.value = "";
     }
 
   return (
@@ -58,7 +89,18 @@ function App() {
             >
                 Export All Jobs
             </button>
+            <button onClick={() => document.getElementById("import-input").click()}>
+                Import Jobs
+            </button>
+            <input
+                id="import-input"
+                type="file"
+                accept=".json"
+                style={{ display: "none" }}
+                onChange={handleImportJSON}
+            />
         </div>
+        {importMessage && <p>{importMessage}</p>}
 
         {showForm && 
             <ApplicationForm

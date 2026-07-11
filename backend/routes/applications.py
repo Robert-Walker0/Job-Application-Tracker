@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, UploadFile, File, status
 from fastapi.responses import JSONResponse
 from database import add_job_application, get_all_job_applications, get_job_application_by_id
 from utility_functions import convert_keys
 from models import JobApplication
+import json
 
 router = APIRouter()
 
@@ -49,9 +50,56 @@ def export_applications_json(filename: str = "job_applications"):
             detail=f"Export failed: {str(error)}"
         )
 
-@router.get("/applications/export/csv")
-def export_applications_csv():
-    pass
+@router.post("/applications/import/json")
+async def import_applications_json(file: UploadFile = File(...)):
+    if not file.filename.endswith(".json"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file type. Only .json files are accepted."
+        )
+
+    try:
+        contents = await file.read()
+        applications = json.loads(contents)
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid JSON file. Please upload a valid exported file."
+        )
+
+    if not isinstance(applications, list):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file structure. Expected a list of applications."
+        )
+
+    imported_count = 0
+    failed_count = 0
+
+    for application in applications:
+        try:
+            add_job_application((
+                application.get("company"),
+                application.get("jobTitle"),
+                application.get("dateApplied"),
+                application.get("platform"),
+                application.get("link"),
+                application.get("payType"),
+                application.get("payAmount"),
+                application.get("notes"),
+                application.get("status"),
+                application.get("lastHeardFrom")
+            ))
+            imported_count += 1
+        except RuntimeError:
+            failed_count += 1
+
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED,
+        content={
+            "message": f"Import complete. {imported_count} imported, {failed_count} failed."
+        }
+    )
 
 
 @router.post("/applications")
