@@ -1,37 +1,40 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, status
 from fastapi.responses import JSONResponse
-from database import add_job_application, get_all_job_applications, get_job_application_by_id, get_application_logs
-from utility_functions import convert_keys
+from utility_functions import to_camel_case_dict
 from models import JobApplication
-import database
-import json
+import json, database
 
 router = APIRouter()
 
 @router.get("/")
-def root() -> dict:
-    return {"message": "Job Application Tracker API"}
-
+def root() -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "Job Application Tracker API"}
+    )
 
 @router.get("/applications/{application_id}")
 def get_application(application_id: int) -> dict:
     try:
-        return get_job_application_by_id(application_id)
+        return database.get_job_application_by_id(application_id)
     except ValueError:
-        raise HTTPException(status_code=404, detail=f"Application {application_id} not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail=f"Application {application_id} not found"
+        )
 
 @router.get("/applications")
 def get_applications() -> list:
-    applications = get_all_job_applications()
-    return [convert_keys(app) for app in applications]
+    applications = database.get_all_job_applications()
+    return [to_camel_case_dict(app) for app in applications]
 
 
 @router.get("/applications/export/json")
-def export_applications_json(filename: str = "job_applications"):
+def export_applications_json(filename: str = "job_applications") -> JSONResponse:
     try:
-        job_applications = get_all_job_applications()
+        job_applications = database.get_all_job_applications()
         if not job_applications: raise ValueError("The database is empty.")
-        list_of_job_applications = [convert_keys(app) for app in job_applications]
+        list_of_job_applications = [to_camel_case_dict(app) for app in job_applications]
         safe_filename = filename if filename.endswith(".json") else f"{filename}.json"
 
         return JSONResponse(
@@ -52,7 +55,7 @@ def export_applications_json(filename: str = "job_applications"):
         )
 
 @router.post("/applications/import/json")
-async def import_applications_json(file: UploadFile = File(...)):
+async def import_applications_json(file: UploadFile = File(...)) -> JSONResponse:
     if not file.filename.endswith(".json"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -74,66 +77,48 @@ async def import_applications_json(file: UploadFile = File(...)):
             detail="Invalid file structure. Expected a list of applications."
         )
 
-    imported_count = 0
-    failed_count = 0
+    added_entries = 0
+    errors_collected = 0
+    required_keys = [field.alias if field.alias else name for name, field in JobApplication.model_fields.items()]
 
     for application in applications:
         try:
-            add_job_application((
-                application.get("company"),
-                application.get("jobTitle"),
-                application.get("dateApplied"),
-                application.get("platform"),
-                application.get("link"),
-                application.get("payType"),
-                application.get("payAmount"),
-                application.get("notes"),
-                application.get("status"),
-                application.get("lastHeardFrom")
-            ))
-            imported_count += 1
+            app_tuple = tuple(application.get(key) for key in required_keys)
+            database.add_job_application(app_tuple)
+            added_entries += 1
         except RuntimeError:
-            failed_count += 1
+            errors_collected += 1
 
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
         content={
-            "message": f"Import complete. {imported_count} imported, {failed_count} failed."
+            "message": f"Import complete. {added_entries} imported, {errors_collected} failed."
         }
     )
 
 
 @router.post("/applications")
-def create_application(application: JobApplication) -> dict:
+def create_application(application: JobApplication) -> JSONResponse:
     try:
-        add_job_application((
-                application.company,
-                application.job_title,
-                application.date_applied,
-                application.platform,
-                application.link,
-                application.pay_type,
-                application.pay_amount,
-                application.notes,
-                application.status,
-                application.last_heard_from
-            ))      
+        database.add_job_application(tuple(application.model_dump().values())) 
     except RuntimeError as error:
-        raise HTTPException(status_code=500, detail=str(error))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=str(error)
+        )
     
     return JSONResponse(
-            status_code=status.HTTP_201_CREATED,
-            content={"message": "Application has been added successfully."}
-        )
+        status_code=status.HTTP_201_CREATED,
+        content={"message": "Application has been added successfully."}
+    )
 
 @router.get("/applications/{application_id}/history")
-def get_application_history(application_id: int):
+def get_application_history(application_id: int) -> list:
     try:
-        logs = get_application_logs(application_id)
-        return logs
+        logs = database.get_application_logs(application_id)
     except Exception as error:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch application history: {str(error)}"
         )
-    
+    return logs
