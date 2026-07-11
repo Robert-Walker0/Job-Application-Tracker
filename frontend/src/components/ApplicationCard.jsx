@@ -1,6 +1,27 @@
-import "./ApplicationCard.css"
+import { useState, useEffect } from "react";
+import "./ApplicationCard.css";
 
 export default function ApplicationCard({ application, onClose }) {
+    const [history, setHistory] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    useEffect(() => {
+        async function fetchHistory() {
+            try {
+                const response = await fetch(`http://localhost:8000/applications/${application.id}/history`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setHistory(data);
+                }
+            } catch (error) {
+                console.error("Error fetching application history:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchHistory();
+    }, [application.id, application.status]);
+
     return (
         <div className="card-overlay" onClick={onClose}>
             <div className="card-box" onClick={e => e.stopPropagation()}>
@@ -56,6 +77,27 @@ export default function ApplicationCard({ application, onClose }) {
                         <span className="card-label">Notes</span>
                         <span className="card-value">{application.notes || "No notes added."}</span>
                     </div>
+                    <div className="card-history-section">
+                        <h3 className="history-title">Application Timeline</h3>
+                        
+                        {isLoading ? (
+                            <p className="history-status-text">Loading timeline history...</p>
+                        ) : history.length === 0 ? (
+                            <p className="no-history-msg">No history exists yet for this application.</p>
+                        ) : (
+                            <div className="history-timeline">
+                                {history.map((log, index) => (
+                                    <div key={index} className="history-timeline-item">
+                                        <span className="history-item-date">
+                                            {/* Matches python database key names returned from your function */}
+                                            {log.log_date} — <span className="history-item-time">{log.log_time}</span>
+                                        </span>
+                                        <span className="history-item-event">{log.event}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="card-footer">
@@ -64,5 +106,5 @@ export default function ApplicationCard({ application, onClose }) {
 
             </div>
         </div>
-    )
+    );
 }
