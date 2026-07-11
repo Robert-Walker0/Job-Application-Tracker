@@ -1,3 +1,4 @@
+from datetime import datetime
 import sqlite3
 import os
 
@@ -32,26 +33,42 @@ def create_connection() -> sqlite3.Connection:
 
 def add_job_application(application_data: tuple) -> None:
     """
-    Inserts a new job application into the database.
+    Inserts a new job application into the database and logs the initial 'Applied' status.
 
     Args:
         application_data: Tuple containing (company, job_title, date_applied,
         platform, link, pay_type, pay_amount, notes, status, last_heard_from)
 
     Raises:
-        RuntimeError: If the database insert fails  
-    
+        RuntimeError: If the database insert or logging fails.
     """
     application_query = """
     INSERT INTO job_applications(company, job_title, date_applied, platform, link, pay_type, pay_amount, notes, status, last_heard_from)    
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
+    
+    log_query = """
+    INSERT INTO job_application_log(application_id, log_date, log_time, event)
+    VALUES (?, ?, ?, ?)
+    """
+    
     connection = sqlite3.connect(DATABASE_PATH)
     try:
-        connection.execute(application_query, application_data)
+        cursor = connection.cursor()        
+        cursor.execute(application_query, application_data)
+        new_application_id = cursor.lastrowid        
+        now = datetime.now()
+        current_date = now.strftime("%Y-%m-%d")
+        current_time = now.strftime("%H:%M:%S")
+        company = application_data[0]
+        job_title = application_data[1]
+        initial_event = f"Application submitted for {job_title} at {company}."
+        cursor.execute(log_query, (new_application_id, current_date, current_time, initial_event))        
         connection.commit()
+        
     except sqlite3.Error as error:
-        raise RuntimeError(f"Failed to add application due to {error}.")
+        connection.rollback()  # Undo any changes if something fails midway
+        raise RuntimeError(f"Failed to add application and history log due to {error}.")
     finally:
         connection.close()
 
@@ -108,6 +125,36 @@ def get_all_job_applications() -> list:
         con.close()
     
     return job_applications
+
+
+def get_application_logs(application_id: int) -> list:
+    """Retrieves all history logs for a specific application, ordered oldest to newest.
+
+    Args:
+        application_id: The unique ID (int) of the application whose logs to fetch.
+
+    Returns:
+        logs: A list of dictionaries containing 'log_date' and 'event' keys.
+
+    Raises:
+        RuntimeError: If the database query fails.
+    """
+    log_query = """
+    SELECT log_date, log_time, event 
+    FROM job_application_log 
+    WHERE application_id = ? 
+    ORDER BY datetime(log_date || ' ' || log_time) ASC
+    """
+    con = create_connection()
+    try:
+        cursor = con.execute(log_query, (application_id,))
+        logs = [dict(row) for row in cursor.fetchall()]
+    except sqlite3.Error as error:
+        raise RuntimeError(f"Failed to retrieve logs for application {application_id} due to {error}.")
+    finally:
+        con.close()
+    
+    return logs
 
 if __name__ == '__main__':
     initialize_project_databases()

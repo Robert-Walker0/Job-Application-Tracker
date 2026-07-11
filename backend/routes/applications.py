@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, status
 from fastapi.responses import JSONResponse
-from database import add_job_application, get_all_job_applications, get_job_application_by_id
+from database import add_job_application, get_all_job_applications, get_job_application_by_id, get_application_logs
 from utility_functions import convert_keys
 from models import JobApplication
+import database
 import json
 
 router = APIRouter()
@@ -124,3 +125,15 @@ def create_application(application: JobApplication) -> dict:
             status_code=status.HTTP_201_CREATED,
             content={"message": "Application has been added successfully."}
         )
+
+@router.get("/applications/{application_id}/history")
+def get_application_history(application_id: int):
+    try:
+        logs = get_application_logs(application_id)
+        return logs
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch application history: {str(error)}"
+        )
+    
