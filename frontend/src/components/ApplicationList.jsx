@@ -1,9 +1,13 @@
+import { useState } from "react"
+import ApplicationCard from "./ApplicationCard"
 import "./ApplicationList.css"
 
 export default function ApplicationList({ applications }) {
+    const [selectedApplication, setSelectedApplication] = useState(null)
+
     return (
         <div className="application-table-container">
-            <h2>Current Tracked Applications</h2>
+            <h2>Current Tracked Applications ({applications.length})</h2>
             {applications.length === 0
                 ? <h3 className="no-applications">No jobs being tracked</h3>
                 : <table className="application-table">
@@ -22,7 +26,11 @@ export default function ApplicationList({ applications }) {
                     </thead>
                     <tbody>
                         {applications.map(application => (
-                            <tr key={application.id}>
+                            <tr
+                                key={application.id}
+                                onClick={() => setSelectedApplication(application)}
+                                style={{ cursor: "pointer" }}
+                            >
                                 <td>{application.company}</td>
                                 <td>{application.jobTitle}</td>
                                 <td>{application.dateApplied}</td>
@@ -37,6 +45,13 @@ export default function ApplicationList({ applications }) {
                     </tbody>
                 </table>
             }
+
+            {selectedApplication && (
+                <ApplicationCard
+                    application={selectedApplication}
+                    onClose={() => setSelectedApplication(null)}
+                />
+            )}
         </div>
-    );
+    )
 }
