@@ -1,5 +1,5 @@
 
-def convert_keys(application: dict) ->  dict:
+def to_camel_case_dict(application: dict) ->  dict:
     return {to_camel_case(key): value for key, value in application.items()}
 
 def to_camel_case(string: str) -> str:
