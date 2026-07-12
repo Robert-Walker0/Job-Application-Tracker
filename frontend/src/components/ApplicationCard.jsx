@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import "./ApplicationCard.css";
+import "./CardField";
+import CardField from "./CardField";
 
 export default function ApplicationCard({ application, onClose }) {
     const [history, setHistory] = useState([]);
@@ -25,58 +27,21 @@ export default function ApplicationCard({ application, onClose }) {
     return (
         <div className="card-overlay" onClick={onClose}>
             <div className="card-box" onClick={e => e.stopPropagation()}>
-
                 <div className="card-header">
                     <h2>Job Application #{application.id} — {application.company}</h2>
                     <button className="card-close-button" onClick={onClose}>✕</button>
                 </div>
-
                 <div className="card-body">
-                    <div className="card-field">
-                        <span className="card-label">Company</span>
-                        <span className="card-value">{application.company}</span>
-                    </div>
-                    <div className="card-field">
-                        <span className="card-label">Job Title</span>
-                        <span className="card-value">{application.jobTitle}</span>
-                    </div>
-                    <div className="card-field">
-                        <span className="card-label">Date Applied</span>
-                        <span className="card-value">{application.dateApplied}</span>
-                    </div>
-                    <div className="card-field">
-                        <span className="card-label">Platform</span>
-                        <span className="card-value">{application.platform || "N/A"}</span>
-                    </div>
-                    <div className="card-field">
-                        <span className="card-label">Link</span>
-                        <span className="card-value">
-                            {application.link 
-                                ? <a href={application.link} target="_blank" rel="noreferrer">{application.link}</a>
-                                : "N/A"
-                            }
-                        </span>
-                    </div>
-                    <div className="card-field">
-                        <span className="card-label">Pay Type</span>
-                        <span className="card-value">{application.payType}</span>
-                    </div>
-                    <div className="card-field">
-                        <span className="card-label">Pay Amount</span>
-                        <span className="card-value">{application.payAmount || "N/A"}</span>
-                    </div>
-                    <div className="card-field">
-                        <span className="card-label">Status</span>
-                        <span className="card-value">{application.status}</span>
-                    </div>
-                    <div className="card-field">
-                        <span className="card-label">Last Heard From</span>
-                        <span className="card-value">{application.lastHeardFrom || "N/A"}</span>
-                    </div>
-                    <div className="card-field card-notes">
-                        <span className="card-label">Notes</span>
-                        <span className="card-value">{application.notes || "No notes added."}</span>
-                    </div>
+                    <CardField label="Company" value={application.company}/>
+                    <CardField label="Job Title" value={application.jobTitle}/>
+                    <CardField label="Date Applied" value={application.dateApplied}/>
+                    <CardField label="Platform" value={application.platform}/>
+                    <CardField label="Link" value={application.link ? (<a href={application.link} target="_blank" rel="noreferrer">{application.link}</a>) : null}/>
+                    <CardField label="Pay Type" value={application.payType}/>
+                    <CardField label="Pay Amount" value={application.payAmount}/>
+                    <CardField label="Status" value={application.status}/>
+                    <CardField label="Last Heard From" value={application.lastHeardFrom}/>
+                    <CardField label="Notes" value={application.notes} noContentText="No notes added." className="card-notes"/>
                     <div className="card-history-section">
                         <h3 className="history-title">Application Timeline</h3>
                         
