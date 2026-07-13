@@ -84,41 +84,27 @@ function App() {
             <h1 className="app-title">Job Application Tracker</h1>
         </div>
         <div className="app-toolbar">
-            <button onClick={() => setShowForm(!showForm)}>
-                Add Job
-            </button>
-            <button 
-                onClick={handleExportJSON}
-                disabled={applications.length === 0}
-            >
-                Export All Jobs
-            </button>
-            <button onClick={() => document.getElementById("import-input").click()}>
-                Import Jobs
-            </button>
-            <input
-                id="import-input"
-                type="file"
-                accept=".json"
-                style={{ display: "none" }}
-                onChange={handleImportJSON}
-            />
+            <button onClick={() => setShowForm(!showForm)}>Add Job</button>
+            <button onClick={handleExportJSON} disabled={applications.length === 0}>Export All Jobs</button>
+            <button onClick={() => document.getElementById("import-input").click()}>Import Jobs</button>
+            <input id="import-input" type="file" accept=".json" style={{ display: "none" }} onChange={handleImportJSON}/>
         </div>
         {importMessage && <p>{importMessage}</p>}
-
-        {showForm && 
-            <ApplicationForm
-                onSubmit={handleAddApplication}
-                onClose={() => setShowForm(false)}
-            />
-        }
-
+        {showForm &&  <ApplicationForm onSubmit={handleAddApplication} onClose={() => setShowForm(false)}/>}
+        
         <div className="app-content">
-            <ApplicationList applications={applications} />
+            <ApplicationList 
+                applications={applications} 
+                onUpdate={() => {
+                    fetch(localDBApplications)
+                    .then(res => res.json())
+                    .then(data => setApplications(data));
+                }} 
+            />
         </div>
 
     </div>
-)
+    )
 }
 
 export default App;
