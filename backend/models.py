@@ -13,3 +13,18 @@ class JobApplication(BaseModel):
     notes: str = None
     status: str = "Applied"
     last_heard_from: str = None
+
+
+class JobApplicationUpdate(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel_case, populate_by_name=True)
+
+    company: str = None
+    job_title: str = None
+    date_applied: str = None
+    platform: str = None
+    link: str = None
+    pay_type: str = None
+    pay_amount: float = None
+    notes: str = None
+    status: str = None
+    last_heard_from: str = None

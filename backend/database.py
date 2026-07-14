@@ -193,6 +193,52 @@ def get_application_logs(application_id: int) -> list:
     
     return logs
 
+def update_job_application(application_id: int, updated_fields: dict) -> dict:
+    """Updates an existing job application and logs a detailed [Field] changed from [Old] to [New] history message."""
+    
+    con = create_connection()
+    try:
+        current_data_query = "SELECT * FROM job_applications WHERE id = ?"
+        current_row = con.execute(current_data_query, (application_id,)).fetchone()
+        if not current_row: raise ValueError(f"No application found with the id: {application_id}")
+        changed_pieces = []
+        for key, new_value in updated_fields.items():
+            old_value = current_row[key]
+            str_old = "None" if old_value is None or str(old_value).strip() == "" else str(old_value).strip()
+            str_new = "None" if new_value is None or str(new_value).strip() == "" else str(new_value).strip()
+
+            if str_old != str_new:
+                friendly_field_name = " ".join(word.capitalize() for word in key.split("_"))
+                changed_pieces.append(f"{friendly_field_name} changed from '{str_old}' to '{str_new}'")
+
+        if changed_pieces:
+            changes_str = "; ".join(changed_pieces)
+            event_message = f"Application updated: {changes_str}"
+        else:
+            event_message = "Application updated (No field values were changed)"
+
+        columns = ", ".join(f"{key} = ?" for key in updated_fields.keys())
+        values = list(updated_fields.values())
+        values.append(application_id)
+        update_query = f"UPDATE job_applications SET {columns} WHERE id = ?"
+        con.execute(update_query, values)
+        now = datetime.now()
+        log_date = now.strftime("%Y-%m-%d")
+        log_time = now.strftime("%H:%M:%S")
+        history_query = """
+            INSERT INTO job_application_log (application_id, event, log_date, log_time)
+            VALUES (?, ?, ?, ?)
+        """
+        con.execute(history_query, (application_id, event_message, log_date, log_time))
+        con.commit()
+        
+    except sqlite3.Error as error:
+        con.rollback()
+        raise RuntimeError(f"Failed to update application {application_id} due to {error}.")
+    finally:
+        con.close()
+    return get_job_application_by_id(application_id)
+
 if __name__ == '__main__':
     initialize_project_databases()
     print("Database created successfully.")

@@ -97,15 +97,21 @@
     flex-shrink: 0; /* Prevents footer from shrinking */
 }
 
-.card-close-btn {
+/* --- Application Card Buttons --- */
+
+.card-footer button {
+    display: flex;
+    justify-content: flex-end;
     background-color: #0f3460;
     color: #e0e0e0;
     border: 1px solid #533483;
     border-radius: 4px;
     padding: 0.5rem 1.5rem;
-    cursor: pointer;
     font-size: 0.9rem;
+    cursor: pointer;
+    margin-right: 1rem;
 }
+
 
 .card-close-btn:hover {
     background-color: #16213e;

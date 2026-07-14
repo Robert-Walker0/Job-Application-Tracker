@@ -2,7 +2,7 @@ import { useState } from "react"
 import ApplicationCard from "./ApplicationCard"
 import "./ApplicationList.css"
 
-export default function ApplicationList({ applications }) {
+export default function ApplicationList({ applications, onUpdate }) {
     const [selectedApplication, setSelectedApplication] = useState(null)
 
     return (
@@ -51,6 +51,10 @@ export default function ApplicationList({ applications }) {
                 <ApplicationCard
                     application={selectedApplication}
                     onClose={() => setSelectedApplication(null)}
+                    onUpdate={() => {
+                        onUpdate();
+                        setSelectedApplication(null);
+                    }}
                 />
             )}
         </div>

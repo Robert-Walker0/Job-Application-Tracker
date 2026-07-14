@@ -1,15 +1,16 @@
+from fastapi import status
 import pytest, os
 
 os.environ["FRONTEND_REMOTE_URL"] = "https://www.example.com"
 
 from fastapi.testclient import TestClient
-import database, json, io
+import database, utility_functions, json, io
 from main import app
 
 client = TestClient(app)
 ROOT_URL = "/"
 APPLICATIONS_URL = "/applications"
-
+EXPORT_URL = "/applications/export/json"
 IMPORT_URL = "/applications/import/json"
 
 
@@ -65,24 +66,24 @@ def application_payload():
 
 def test_root():
    response = client.get(ROOT_URL)
-   assert response.status_code == 200
+   assert response.status_code == status.HTTP_200_OK
    assert response.json()["message"] == "Job Application Tracker API"
 
 def test_get_applications():
     response = client.get(APPLICATIONS_URL)
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert isinstance(response.json(), list)
 
 def test_create_application(application_payload):
     response = client.post(APPLICATIONS_URL, json=application_payload)
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["message"] == "Application has been added successfully."
 
 def test_create_application_missing_required_field(application_payload):
     missing_field = "company"
     del application_payload[missing_field]
     response = client.post(APPLICATIONS_URL, json=application_payload)
-    assert response.status_code == 422
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     detail = response.json()["detail"]
     assert missing_field in detail[0]["loc"]
 
@@ -90,30 +91,30 @@ def test_create_application_invalid_data_type(application_payload):
     invalid_field, invalid_data = "payAmount", "abc"
     application_payload[invalid_field] = invalid_data
     response = client.post(APPLICATIONS_URL, json=application_payload)
-    assert response.status_code == 422
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     detail = response.json()["detail"]
     assert invalid_field in detail[0]["loc"]    
 
 def test_get_application(application_payload):
     create_response = client.post(APPLICATIONS_URL, json=application_payload)  
-    assert create_response.status_code == 201
+    assert create_response.status_code == status.HTTP_201_CREATED
     all_response = client.get(APPLICATIONS_URL)
-    assert all_response.status_code == 200
+    assert all_response.status_code == status.HTTP_200_OK
     applications = all_response.json()
     last_id = applications[-1]["id"]
     response = client.get(f"{APPLICATIONS_URL}/{last_id}")
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert response.json()["company"] == application_payload["company"]
 
 def test_get_application_not_found():
     app_id = 999999
     response = client.get(f"{APPLICATIONS_URL}/{app_id}")
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == f"Application {app_id} not found"
 
 def test_get_application_invalid_id_type():
     response = client.get(f"{APPLICATIONS_URL}/not-a-number")
-    assert response.status_code == 422
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 def test_export_applications_json_success(monkeypatch):
@@ -121,11 +122,11 @@ def test_export_applications_json_success(monkeypatch):
     mock_data = [
         {"id": 1, "company_name": "Google", "job_title": "Software Engineer"}
     ]
-    monkeypatch.setattr("routes.applications.get_all_job_applications", lambda: mock_data)
-    monkeypatch.setattr("routes.applications.convert_keys", lambda x: x)
+    monkeypatch.setattr("routes.applications.database.get_all_job_applications", lambda: mock_data)
+    monkeypatch.setattr("routes.applications.to_camel_case_dict", lambda x: x)
     filename = "my_custom_backup"
-    response = client.get(f"/applications/export/json?filename={filename}")
-    assert response.status_code == 200
+    response = client.get(f"{EXPORT_URL}?filename={filename}")
+    assert response.status_code == status.HTTP_200_OK
     assert response.headers["content-type"] == "application/json"   
     assert response.headers["content-disposition"] == f'attachment; filename="{filename}.json"' or \
            response.headers["content-disposition"] == f'attachment; filename={filename}.json'
@@ -136,25 +137,20 @@ def test_export_applications_json_success(monkeypatch):
 
 def test_export_applications_json_empty_database(monkeypatch):
     """Test that a 404 is raised with a clear message when no jobs exist."""
-    monkeypatch.setattr("routes.applications.get_all_job_applications", lambda: [])
-    response = client.get("/applications/export/json")
-    assert response.status_code == 404
+    monkeypatch.setattr("routes.applications.database.get_all_job_applications", lambda: [])
+    response = client.get(EXPORT_URL)
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "No job applications found to export."
-
-def make_json_file(data, filename="applications.json"):
-    """Helper that creates an in-memory JSON file for upload testing."""
-    content = json.dumps(data).encode("utf-8")
-    return {"file": (filename, io.BytesIO(content), "application/json")}
 
 
 def test_import_valid_json_file():
-    response = client.post(IMPORT_URL, files=make_json_file(VALID_APPLICATIONS))
-    assert response.status_code == 201
+    response = client.post(IMPORT_URL, files=utility_functions.make_json_file(VALID_APPLICATIONS))
+    assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["message"] == "Import complete. 2 imported, 0 failed."
 
 
 def test_import_verifies_data_in_database():
-    client.post(IMPORT_URL, files=make_json_file(VALID_APPLICATIONS))
+    client.post(IMPORT_URL, files=utility_functions.make_json_file(VALID_APPLICATIONS))
     applications = database.get_all_job_applications()
     assert len(applications) == 2
     assert applications[0]["company"] == "Google"
@@ -166,7 +162,7 @@ def test_import_invalid_file_type():
     response = client.post(IMPORT_URL, files={
         "file": ("applications.csv", io.BytesIO(content), "text/csv")
     })
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "Only .json files are accepted" in response.json()["detail"]
 
 
@@ -175,22 +171,19 @@ def test_import_invalid_json():
     response = client.post(IMPORT_URL, files={
         "file": ("applications.json", io.BytesIO(content), "application/json")
     })
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "Invalid JSON file" in response.json()["detail"]
-
 
 def test_import_wrong_structure():
     content = json.dumps({"company": "Google"}).encode("utf-8")
-    response = client.post(IMPORT_URL, files={
-        "file": ("applications.json", io.BytesIO(content), "application/json")
-    })
-    assert response.status_code == 400
+    response = client.post(IMPORT_URL, files=utility_functions.make_json_file({"company": "Google"}))
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "Expected a list" in response.json()["detail"]
 
 
 def test_import_empty_list():
-    response = client.post(IMPORT_URL, files=make_json_file([]))
-    assert response.status_code == 201
+    response = client.post(IMPORT_URL, files=utility_functions.make_json_file([]))
+    assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["message"] == "Import complete. 0 imported, 0 failed."
 
 
@@ -210,7 +203,44 @@ def test_import_partial_failure():
             "last_heard_from": None
         }
     ]
-    response = client.post(IMPORT_URL, files=make_json_file(mixed_data))
-    assert response.status_code == 201
+    response = client.post(IMPORT_URL, files=utility_functions.make_json_file(mixed_data))
+    assert response.status_code == status.HTTP_201_CREATED
     assert "1 imported" in response.json()["message"]
     assert "1 failed" in response.json()["message"]
+
+
+def test_update_job_application_by_id(application_payload):
+    create_response = client.post(APPLICATIONS_URL, json=application_payload)
+    assert create_response.status_code == status.HTTP_201_CREATED
+    all_response = client.get(APPLICATIONS_URL)
+    application_id = all_response.json()[-1]["id"]
+    response = client.put(f"{APPLICATIONS_URL}/{application_id}", json={"company": "Updated Company", "status": "Interview"})
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["company"] == "Updated Company"
+    assert response.json()["status"] == "Interview"
+
+
+def test_update_job_application_by_id_not_found():
+    response = client.put(f"{APPLICATIONS_URL}/99999", json={"company": "Updated Company"})
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert "99999" in response.json()["detail"]
+
+
+def test_update_job_application_by_id_no_fields(application_payload):
+    create_response = client.post(APPLICATIONS_URL, json=application_payload)
+    assert create_response.status_code == status.HTTP_201_CREATED
+    all_response = client.get(APPLICATIONS_URL)
+    application_id = all_response.json()[-1]["id"]
+    response = client.put(f"{APPLICATIONS_URL}/{application_id}", json={})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+def test_update_job_application_by_id_logs_history(application_payload):
+    client.post(APPLICATIONS_URL, json=application_payload)
+    all_response = client.get(APPLICATIONS_URL)
+    application_id = all_response.json()[-1]["id"]
+    client.put(f"{APPLICATIONS_URL}/{application_id}", json={"status": "Interview"})
+    history_response = client.get(f"{APPLICATIONS_URL}/{application_id}/history")
+    assert history_response.status_code == status.HTTP_200_OK
+    history = history_response.json()
+    assert len(history) > 0
+    assert any("Status" in entry["event"] for entry in history)
