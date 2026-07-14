@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, status
 from fastapi.responses import JSONResponse
 from utility_functions import to_camel_case_dict
-from models import JobApplication
+from models import JobApplication, JobApplicationUpdate
 import json, database
 
 router = APIRouter()
@@ -122,3 +122,43 @@ def get_application_history(application_id: int) -> list:
             detail=f"Failed to fetch application history: {str(error)}"
         )
     return logs
+
+@router.put("/applications/{application_id}")
+def update_job_application_by_id(application_id: int, application: JobApplicationUpdate) -> dict:
+    """Updates an existing job application.
+
+    Args:
+        application_id: The ID of the application to update.
+        application: The fields to update.
+
+    Returns:
+        dict: The updated application data.
+
+    Raises:
+        HTTPException 404: If application not found.
+        HTTPException 500: If database update fails.
+    """
+    updated_fields = {
+        key: value 
+        for key, value in application.model_dump(exclude_none=True).items()
+    }
+
+    if not updated_fields:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No fields provided to update."
+        )
+
+    try:
+        updated = database.update_job_application(application_id, updated_fields)
+        return to_camel_case_dict(updated)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Application {application_id} not found."
+        )
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(error)
+        )
