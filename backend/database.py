@@ -3,8 +3,9 @@ import sqlite3
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_PATH = os.path.join(BASE_DIR, 'job_application_tracker_table.db')
-SCHEMA_PATH = os.path.join(BASE_DIR, 'schema.sql')
+DATABASE_PATH = os.path.join(BASE_DIR, "job_application_tracker_table.db")
+SCHEMA_PATH = os.path.join(BASE_DIR, "schema.sql")
+
 
 def initialize_project_databases() -> None:
     """Creates all database tables from schema.sql if they don't exist.
@@ -16,6 +17,7 @@ def initialize_project_databases() -> None:
         connection.executescript(file.read())
     connection.commit()
     connection.close()
+
 
 def create_connection() -> sqlite3.Connection:
     """Creates and returns a configured SQLite database connection.
@@ -31,46 +33,98 @@ def create_connection() -> sqlite3.Connection:
     connection.row_factory = sqlite3.Row
     return connection
 
-def add_job_application(application_data: tuple) -> None:
+
+def add_initial_log_entry(
+    cursor: sqlite3.Cursor, application_id: int, company: str, job_title: str
+) -> None:
+    """Writes the initial submission log entry for a new application."""
+    current_time = datetime.now()
+    log_date = current_time.strftime("%Y-%m-%d")
+    log_time = current_time.strftime("%H:%M:%S")
+    event = f"Application submitted for {job_title} at {company}."
+    log_query = """
+    INSERT INTO job_application_log(application_id, log_date, log_time, event)
+    VALUES (?, ?, ?, ?)
+    """
+    cursor.execute(log_query, (application_id, log_date, log_time, event))
+
+
+def log_application_event(
+    cursor: sqlite3.Cursor, application_id: int, event_message: str
+) -> None:
+    """Write a custom event log entry to the history table using an active cursor."""
+    current_time = datetime.now()
+    log_date = current_time.strftime("%Y-%m-%d")
+    log_time = current_time.strftime("%H:%M:%S")
+    history_query = """
+    INSERT INTO job_application_log (application_id, event, log_date, log_time)
+    VALUES (?, ?, ?, ?) 
+    """
+    cursor.execute(history_query, (application_id, event_message, log_date, log_time))
+
+
+def build_changes_log_message(current_row: dict, updated_fields: dict) -> str:
+    changed_pieces = []
+    for key, new_value in updated_fields.items():
+        old_value = current_row[key]
+        str_old = (
+            "None"
+            if old_value is None or str(old_value).strip() == ""
+            else str(old_value).strip()
+        )
+        str_new = (
+            "None"
+            if new_value is None or str(new_value).strip() == ""
+            else str(new_value).strip()
+        )
+
+        if str_old != str_new:
+            friendly_field_name = " ".join(word.capitalize() for word in key.split("_"))
+            changed_pieces.append(
+                f"{friendly_field_name} changed from '{str_old}' to '{str_new}'"
+            )
+
+    if changed_pieces:
+        return f"Application updated: {'; '.join(changed_pieces)}"
+    return "Application updated (No field values were changed)"  # This result should be impossible due to REACT Frotnend setup along with backend code, but we should notre if this ever happens somehow.
+
+
+def add_job_application(application_data: tuple, history: list = None) -> int:
     """
     Inserts a new job application into the database and logs the initial 'Applied' status.
 
     Args:
-        application_data: Tuple containing (company, job_title, date_applied,
-        platform, link, pay_type, pay_amount, notes, status, last_heard_from)
+    application_data: Tuple containing (company, job_title, date_applied,
+    platform, link, pay_type, pay_amount, notes, status, last_heard_from)
 
-    Raises:
-        RuntimeError: If the database insert or logging fails.
+    Raise:
+    RuntimeError: If the database insert or logging fails.
     """
     application_query = """
     INSERT INTO job_applications(company, job_title, date_applied, platform, link, pay_type, pay_amount, notes, status, last_heard_from)    
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
-    
-    log_query = """
-    INSERT INTO job_application_log(application_id, log_date, log_time, event)
-    VALUES (?, ?, ?, ?)
-    """
-    
-    connection = sqlite3.connect(DATABASE_PATH)
-    try:
-        cursor = connection.cursor()        
+    with sqlite3.connect(DATABASE_PATH) as connection:
+        cursor = connection.cursor()
         cursor.execute(application_query, application_data)
-        new_application_id = cursor.lastrowid        
-        now = datetime.now()
-        current_date = now.strftime("%Y-%m-%d")
-        current_time = now.strftime("%H:%M:%S")
-        company = application_data[0]
-        job_title = application_data[1]
-        initial_event = f"Application submitted for {job_title} at {company}."
-        cursor.execute(log_query, (new_application_id, current_date, current_time, initial_event))        
+        current_app_id = cursor.lastrowid
+
+        if not history:
+            company = application_data[0]
+            job_title = application_data[1]
+            add_initial_log_entry(cursor, current_app_id, company, job_title)
+        else:
+            for entry in history:
+                log_data = [entry.get(key) for key in ("log_date", "log_time", "event")]
+                log_query = """
+                INSERT INTO job_application_log (application_id, log_date, log_time, event)
+                VALUES (?, ?, ?, ?)
+                """
+                cursor.execute(log_query, (current_app_id, *log_data))
+
         connection.commit()
-        
-    except sqlite3.Error as error:
-        connection.rollback()  # Undo any changes if something fails midway
-        raise RuntimeError(f"Failed to add application and history log due to {error}.")
-    finally:
-        connection.close()
+
+    return current_app_id
 
 
 def get_job_application_by_id(application_id: int) -> dict:
@@ -89,20 +143,23 @@ def get_job_application_by_id(application_id: int) -> dict:
     collection_query = "SELECT * FROM job_applications WHERE id = ?"
     con = create_connection()
     try:
-        cursor = con.execute(collection_query, (application_id,))
+        cursor = con.cursor()
+        cursor.execute(collection_query, (application_id,))
         row = cursor.fetchone()
     except sqlite3.Error as error:
-        raise RuntimeError(f"Failed to retrieve application {application_id} due to {error}.")
-    finally: 
+        raise RuntimeError(
+            f"Failed to retrieve application {application_id} due to {error}."
+        )
+    finally:
         con.close()
 
     if not row:
         raise ValueError(f"No application found with the id: {application_id}")
-    
+
     job_application = dict(row)
     return job_application
-    
-    
+
+
 def get_all_job_applications() -> list:
     """Retrieves all of the job applications from the database and dynamically flags inactive ones using SQLite dae arithmetic.
 
@@ -124,13 +181,14 @@ def get_all_job_applications() -> list:
     """
     con = create_connection()
     try:
-        cursor = con.execute(query)
+        cursor = con.cursor()
+        cursor.execute(query)
         applications = [dict(row) for row in cursor.fetchall()]
     except sqlite3.Error as error:
         raise RuntimeError(f"Failed to fetch applications: {error}")
     finally:
         con.close()
-        
+
     return applications
 
 
@@ -154,13 +212,16 @@ def get_application_logs(application_id: int) -> list:
     """
     con = create_connection()
     try:
-        cursor = con.execute(log_query, (application_id,))
+        cursor = con.cursor()
+        cursor.execute(log_query, (application_id,))
         logs = [dict(row) for row in cursor.fetchall()]
     except sqlite3.Error as error:
-        raise RuntimeError(f"Failed to retrieve logs for application {application_id} due to {error}.")
+        raise RuntimeError(
+            f"Failed to retrieve logs for application {application_id} due to {error}."
+        )
     finally:
         con.close()
-    
+
     return logs
 
 
@@ -184,61 +245,47 @@ def get_application_logs(application_id: int) -> list:
     """
     con = create_connection()
     try:
-        cursor = con.execute(log_query, (application_id,))
+        cursor = con.cursor()
+        cursor.execute(log_query, (application_id,))
         logs = [dict(row) for row in cursor.fetchall()]
     except sqlite3.Error as error:
-        raise RuntimeError(f"Failed to retrieve logs for application {application_id} due to {error}.")
+        raise RuntimeError(
+            f"Failed to retrieve logs for application {application_id} due to {error}."
+        )
     finally:
         con.close()
-    
+
     return logs
+
 
 def update_job_application(application_id: int, updated_fields: dict) -> dict:
     """Updates an existing job application and logs a detailed [Field] changed from [Old] to [New] history message."""
-    
-    con = create_connection()
+
+    connection = create_connection()
     try:
+        cursor = connection.cursor()
         current_data_query = "SELECT * FROM job_applications WHERE id = ?"
-        current_row = con.execute(current_data_query, (application_id,)).fetchone()
-        if not current_row: raise ValueError(f"No application found with the id: {application_id}")
-        changed_pieces = []
-        for key, new_value in updated_fields.items():
-            old_value = current_row[key]
-            str_old = "None" if old_value is None or str(old_value).strip() == "" else str(old_value).strip()
-            str_new = "None" if new_value is None or str(new_value).strip() == "" else str(new_value).strip()
-
-            if str_old != str_new:
-                friendly_field_name = " ".join(word.capitalize() for word in key.split("_"))
-                changed_pieces.append(f"{friendly_field_name} changed from '{str_old}' to '{str_new}'")
-
-        if changed_pieces:
-            changes_str = "; ".join(changed_pieces)
-            event_message = f"Application updated: {changes_str}"
-        else:
-            event_message = "Application updated (No field values were changed)"
-
+        current_row = cursor.execute(current_data_query, (application_id,)).fetchone()
+        if not current_row:
+            raise ValueError(f"No application found with the id: {application_id}")
+        event_message = build_changes_log_message(current_row, updated_fields)
         columns = ", ".join(f"{key} = ?" for key in updated_fields.keys())
         values = list(updated_fields.values())
         values.append(application_id)
         update_query = f"UPDATE job_applications SET {columns} WHERE id = ?"
-        con.execute(update_query, values)
-        now = datetime.now()
-        log_date = now.strftime("%Y-%m-%d")
-        log_time = now.strftime("%H:%M:%S")
-        history_query = """
-            INSERT INTO job_application_log (application_id, event, log_date, log_time)
-            VALUES (?, ?, ?, ?)
-        """
-        con.execute(history_query, (application_id, event_message, log_date, log_time))
-        con.commit()
-        
+        cursor.execute(update_query, values)
+        log_application_event(cursor, application_id, event_message)
+        connection.commit()
     except sqlite3.Error as error:
-        con.rollback()
-        raise RuntimeError(f"Failed to update application {application_id} due to {error}.")
+        connection.rollback()
+        raise RuntimeError(
+            f"Failed to update application {application_id} due to {error}."
+        )
     finally:
-        con.close()
+        connection.close()
     return get_job_application_by_id(application_id)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     initialize_project_databases()
     print("Database created successfully.")
