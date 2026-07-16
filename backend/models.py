@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict
+from typing import Literal
 from utility_functions import to_camel_case
 
 
@@ -9,7 +10,7 @@ class JobApplication(BaseModel):
     date_applied: str
     platform: str = None
     link: str = None
-    pay_type: str
+    pay_type: Literal["Contract", "Hourly", "Salaried", "Intership"]
     pay_amount: float = None
     notes: str = None
     status: str = "Applied"
