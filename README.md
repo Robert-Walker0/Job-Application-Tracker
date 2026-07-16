@@ -1,5 +1,12 @@
 # Job Application Tracker
 
+[![Tests](https://github.com/Robert-Walker0/Job-Application-Tracker/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/<YOUR_USERNAME>/<YOUR_REPO_NAME>/actions)
+![Python](https://img.shields.io/badge/python-%233776AB.svg?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-%23009688.svg?style=flat-square&logo=FastAPI&logoColor=white)
+![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=flat-square&logo=sqlite&logoColor=white)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=flat-square&logo=react&logoColor=%2361DAFB)
+
+
 ## Keep track of where you apply with one application
 
 Having problems remembering where you last applied, not anymore. With this application you can keep track of every job you applied with ease. 
@@ -88,16 +95,14 @@ Render’s free tier uses ephemeral storage, meaning the database resets on
 each cold start. The export feature gives users a way to preserve their
 data between sessions.
 
-
 ## Planned Features
 - Application history log display
 - Interview round tracking
-- Edit existing applications
 - Customizable color schema settings
 
 ## What I Learned
 
-Sample text goes here
+What I learned will added once I complete the project fully.
 
 ## Running the Project 
 
@@ -135,6 +140,28 @@ The application is currently live at:
 - Backend API: https://job-application-tracker-mxlz.onrender.com/docs
 
 Note: The free tier hosting may take 30-60 seconds to wake up on first visit.
+
+## How to Run Tests
+
+The test suite built for this project is using pytest and covers API endpoints, schema validation, and database operations.
+
+To run the test locally:
+1. Create the backend virtual environment:
+```bash
+cd backend
+pip -m venv  .venv
+pip install -r requirements.txt
+```
+
+2. Ensure the backend virtual environment is active:
+```bash
+source .venv/bin/activate # Windows: .venv\Scripts\activate
+```
+
+3. Run the full test suite:
+```bash
+python -m pytest
+```
 
 ## Video
 
