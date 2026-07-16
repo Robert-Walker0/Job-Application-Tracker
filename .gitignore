@@ -13,3 +13,4 @@ backend/.env
 # Frontend Related Files
 frontend/node_modules/
 frontend/dists/
+frontend/src/.env.development
