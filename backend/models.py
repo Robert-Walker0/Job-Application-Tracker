@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from utility_functions import to_camel_case
 
+
 class JobApplication(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel_case, populate_by_name=True)
     company: str
