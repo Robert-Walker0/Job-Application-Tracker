@@ -1,4 +1,3 @@
-import React from "react";
 
 export default function CardField({ label, value, noContentText = "N/A", className = ""}) {
     return (
@@ -8,3 +7,4 @@ export default function CardField({ label, value, noContentText = "N/A", classNa
         </div>
     );
 }
+
