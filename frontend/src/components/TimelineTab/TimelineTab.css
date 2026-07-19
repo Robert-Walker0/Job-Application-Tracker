@@ -1,0 +1,63 @@
+
+.card-history-section {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #0f3460;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.history-title {
+    color: #ffffff;
+    font-size: 0.95rem;
+    margin: 0 0 0.75rem 0;
+}
+
+.history-status-text,
+.no-history-msg {
+    color: #a0aec0;
+    font-size: 0.85rem;
+    font-style: italic;
+    margin: 0;
+}
+
+.history-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-left: 0.75rem;
+    border-left: 2px solid #0f3460;
+    margin-left: 0.25rem;
+}
+
+.history-timeline-item {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+}
+
+.history-timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -15px; 
+    top: 5px;
+    width: 6px;
+    height: 6px;
+    background-color: #a78bfa;
+    border-radius: 50%;
+}
+
+.history-item-date {
+    color: #a0aec0;
+    font-size: 0.8rem;
+    width: 100px;
+    flex-shrink: 0;
+}
+
+.history-item-event {
+    color: #e0e0e0;
+    font-size: 0.85rem;
+    word-break: break-word;
+    flex-grow: 1;
+}
