@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import "./ApplicationCard.css";
 import CardEditForm from "../CardEditForm/CardEditForm";
 import CardDetailView from "../CardDetailView/CardDetailView";
-import TimelineTab from "../Timeline/TimelineTab";
+import TimelineTab from "../TimelineTab/TimelineTab";
 import API_BASE_URL from "../../config";
 
 export default function ApplicationCard({ application, onClose, onUpdate }) {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
-import ApplicationForm from './components/ApplicationForm'
-import ApplicationList from './components/ApplicationList'
+import ApplicationForm from './components/ApplicationForm/ApplicationForm'
+import ApplicationList from './components/ApplicationList/ApplicationList'
 import API_BASE_URL from "./config" 
 import './App.css'
 
