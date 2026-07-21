@@ -11,6 +11,7 @@ export default function ApplicationCard({ application, onClose, onUpdate }) {
     const [isLoading, setIsLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState({ ...application });
+    const [activeTab, setActiveTab] = useState("Details");
 
     useEffect(() => {
         async function fetchHistory() {
@@ -70,6 +71,17 @@ export default function ApplicationCard({ application, onClose, onUpdate }) {
                 <div className="card-header">
                     <h2>Job Application #{application.id} — {application.company}</h2>
                     <button className="card-close-button" onClick={onClose}>✕</button>
+                </div>
+                <div className="card-toolbar">
+                    <button className="active-tab" onClick={() => null}>
+                        Details
+                    </button>
+                    <button onClick={() => null}>
+                        Interview Rounds
+                    </button>
+                    <button onClick={() => null}>
+                        Timeline
+                    </button>
                 </div>
                 <div className="card-body">
                     {isEditing ? (<CardEditForm editData={editData} onFieldChange={handleFieldChange}/>) : (<CardDetailView application={application}/>)}

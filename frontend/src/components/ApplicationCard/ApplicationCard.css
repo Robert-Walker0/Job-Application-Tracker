@@ -57,6 +57,29 @@
     overflow-y: auto; 
 }
 
+.card-toolbar {
+    display: flex;
+    width: 100%;
+}
+
+.card-toolbar button {
+    flex: 1;
+    background: none;
+    color: white;
+    border: none;
+    padding: 10px 0;
+    cursor: pointer;
+}
+
+.card-toolbar button:not(:last-child) {
+    border-right: 1px solid white;
+}
+
+.card-toolbar button.active-tab {
+    background: rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid white;
+}
+
 .card-footer button {
     display: flex;
     justify-content: flex-end;
