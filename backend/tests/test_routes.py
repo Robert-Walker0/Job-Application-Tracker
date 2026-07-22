@@ -15,11 +15,15 @@ VALID_APPLICATIONS = [
     {
         "company": "Google",
         "jobTitle": "Software Engineer",
+        "location": "400 4th Avenue Jackson Heights, NY 11372",
+        "priority": "High",
+        "workType": "On-Site",
         "dateApplied": "2026-07-07",
         "platform": "LinkedIn",
         "link": "https://google.com",
         "payType": "Salaried",
         "payAmount": 120000,
+        "resumeName": "",
         "notes": "Great opportunity",
         "status": "Applied",
         "lastHeardFrom": "2026-07-07",
@@ -27,11 +31,15 @@ VALID_APPLICATIONS = [
     {
         "company": "Affirm",
         "jobTitle": "Apprentice Engineer",
+        "location": "400 4th Avenue Jackson Heights, NY 11372",
+        "priority": "High",
+        "workType": "On-Site",
         "dateApplied": "2026-07-08",
         "platform": "Company Website",
         "link": "https://affirm.com",
         "payType": "Salaried",
         "payAmount": 95000,
+        "resumeName": "",
         "notes": "",
         "status": "Applied",
         "lastHeardFrom": "2026-07-08",
@@ -52,11 +60,15 @@ def application_payload():
     return {
         "company": "Test Inc",
         "jobTitle": "Software Engineer",
+        "location": "400 4th Avenue Jackson Heights, NY 11372",
+        "priority": "Medium",
+        "workType": "On-Site",
         "dateApplied": "2026-07-07",
         "platform": "",
         "link": "",
         "payType": "Hourly",
         "payAmount": 35,
+        "resumeName": "",
         "notes": "",
         "status": "Applied",
         "lastHeardFrom": "2026-07-07",
@@ -207,16 +219,19 @@ def test_import_empty_list():
 
 
 def test_process_application_import_handles_partial_failures():
-    # 1. Arrange: Prepare a mix of valid and invalid data
     mixed_data = [
         {
             "company": "Valid Corp",
             "jobTitle": "Backend Engineer",
+            "location": "400 4th Avenue Jackson Heights, NY 11372",
+            "priority": "High",
+            "workType": "On-Site",
             "dateApplied": "2026-07-15",
             "platform": "LinkedIn",
             "link": "https://linkedin.com/jobs/1",
             "payType": "Salaried",
             "payAmount": "100000",
+            "resumeName": "",
             "notes": "First round soon",
             "status": "Applied",
             "lastHeardFrom": "2026-07-15",
