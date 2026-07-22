@@ -28,7 +28,6 @@ export default function ApplicationForm({ onSubmit, onClose }) {
             link,
             payType,
             payAmount,
-            notes,
             status,
             lastHeardFrom,
             notes
@@ -41,12 +40,10 @@ export default function ApplicationForm({ onSubmit, onClose }) {
     return (
     <div className="modal-overlay" onClick={onClose}>
         <div className="modal-box" onClick={e => e.stopPropagation()}>
-
             <div className="modal-header">
                 <h2>Add Job Application</h2>
                 <button className="modal-close-button" onClick={onClose}>✕</button>
             </div>
-
             <form onSubmit={handleSubmit}>
                 <FormInput label="Company *" value={company} onChange={e => setCompany(e.target.value)} required/>
                 <FormInput label="Job Title *" value={jobTitle} onChange={e => setJobTitle(e.target.value)} required/>
@@ -56,7 +53,6 @@ export default function ApplicationForm({ onSubmit, onClose }) {
                 <FormSelect label="Pay Type *" value={payType} onChange={e => setPayType(e.target.value)} options={["Contract", "Hourly", "Salaried", "Internship"]} required/>
                 <FormInput label="Pay Amount *" value={payAmount} type="number" onChange={e => setPayAmount(e.target.value)} required/>
                 <FormInput label="Last Heard From" value={lastHeardFrom} type="date" onChange={e => setLastHeardFrom(e.target.value)}/>
-
                 <div className="form-field">
                     <label>Notes</label>
                     <textarea placeholder="Place notes here" value={notes} onChange={e => setNotes(e.target.value)}/>
@@ -67,8 +63,7 @@ export default function ApplicationForm({ onSubmit, onClose }) {
                     <button type="submit" className="button-submit">Add Application</button>
                 </div>
             </form>
-
         </div>
     </div>
-)
+    );
 }

@@ -1,0 +1,40 @@
+.card-field {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.card-label {
+    color: #a0aec0;
+    font-size: 0.85rem;
+    width: 130px;
+    flex-shrink: 0;
+}
+
+.card-value {
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    word-break: break-word;
+}
+
+.card-value a {
+    color: #a78bfa;
+    text-decoration: none;
+}
+
+.card-value a:hover {
+    text-decoration: underline;
+}
+
+.card-notes .card-value {
+    white-space: pre-wrap;
+}
+
+.card-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #0f3460;
+    display: flex;
+    justify-content: flex-end;
+    flex-shrink: 0; /* Prevents footer from shrinking */
+}

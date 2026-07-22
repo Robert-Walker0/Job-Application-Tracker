@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS job_applications(
 CREATE TABLE IF NOT EXISTS interview_rounds(
     id INTEGER PRIMARY KEY,
     application_id INTEGER NOT NULL,
-    round_date TEXT NOT NULL,
     round_label TEXT NOT NULL,
+    round_date TEXT NOT NULL,
     notes TEXT,
     FOREIGN KEY (application_id) REFERENCES job_applications(id)
 );

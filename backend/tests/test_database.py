@@ -71,32 +71,40 @@ def test_build_changes_log_message_no_changes():
 
 
 def test_add_initial_log_entry(test_database):
-    """Tests adding the inital log entry when creating a job application."""
     conn = database.create_connection()
     cursor = conn.cursor()
-    database.add_initial_log_entry(cursor, 101, "Google", "Frontend Lead")
+    application_id = database.add_job_application(APPLICATION_DATA)
     conn.commit()
-    cursor.execute("SELECT * FROM job_application_log WHERE application_id = 101")
-    row = cursor.fetchone()
+    cursor.execute(
+        "SELECT * FROM job_application_log WHERE application_id = ?", (application_id,)
+    )
+    rows = cursor.fetchall()
     conn.close()
+    row = rows[0]
+    assert len(rows) == 1
     assert row is not None
-    assert row["application_id"] == 101
-    assert row["event"] == "Application submitted for Frontend Lead at Google."
+    assert row["application_id"] == application_id
+    assert (
+        row["event"] == "Application submitted for Software Engineer at Test Company."
+    )
     assert row["log_date"] == datetime.now().strftime("%Y-%m-%d")
 
 
 def test_log_application_event(test_database):
-    """Test helper that handles updating the event history."""
     conn = database.create_connection()
     cursor = conn.cursor()
+    application_id = database.add_job_application(APPLICATION_DATA)
     test_msg = "Status changed from 'Applied' to 'Interview'"
-    database.log_application_event(cursor, 202, test_msg)
+    database.log_application_event(cursor, application_id, test_msg)
     conn.commit()
-    cursor.execute("SELECT * FROM job_application_log WHERE application_id = 202")
+    cursor.execute(
+        "SELECT * FROM job_application_log WHERE application_id = ? AND event = ?",
+        (application_id, test_msg),
+    )
     row = cursor.fetchone()
     conn.close()
     assert row is not None
-    assert row["application_id"] == 202
+    assert row["application_id"] == application_id
     assert row["event"] == test_msg
     assert row["log_date"] == datetime.now().strftime("%Y-%m-%d")
 
@@ -244,3 +252,47 @@ def test_get_all_job_applications_flags_inactive(test_database):
     )
     assert active_record["is_inactive"] == 0
     assert stale_record["is_inactive"] == 1
+
+
+def test_add_interview_round(test_database):
+    """Tests adding an interview round for an existing application."""
+    application_id = database.add_job_application(APPLICATION_DATA)
+    round_id = database.add_interview_round(
+        application_id, "Phone Screen", "2026-07-20", "Went well"
+    )
+    conn = database.create_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM interview_rounds WHERE id = ?", (round_id,))
+    row = cursor.fetchone()
+    conn.close()
+    assert row is not None
+    assert row["application_id"] == application_id
+    assert row["round_label"] == "Phone Screen"
+    assert row["round_date"] == "2026-07-20"
+    assert row["notes"] == "Went well"
+
+
+def test_add_interview_round_invalid_application(test_database):
+    """Tests that adding a round for a nonexistent application raises RuntimeError."""
+    with pytest.raises(RuntimeError):
+        database.add_interview_round(9999, "Phone Screen", "2026-07-20", "")
+
+
+def test_get_interview_rounds_multiple(test_database):
+    """Tests that multiple rounds for one application are all returned, ordered by date."""
+    application_id = database.add_job_application(APPLICATION_DATA)
+    database.add_interview_round(application_id, "Phone Screen", "2026-07-10", "")
+    database.add_interview_round(application_id, "Onsite", "2026-07-20", "")
+    rounds = database.get_interview_rounds(application_id)
+
+    assert len(rounds) == 2
+    assert rounds[0]["round_label"] == "Phone Screen"
+    assert rounds[1]["round_label"] == "Onsite"
+
+
+def test_get_interview_rounds_empty(test_database):
+    """Tests that an application with no rounds returns an empty list."""
+    application_id = database.add_job_application(APPLICATION_DATA)
+    rounds = database.get_interview_rounds(application_id)
+
+    assert rounds == []

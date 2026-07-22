@@ -1,5 +1,5 @@
 import { useState } from "react"
-import ApplicationCard from "./ApplicationCard"
+import ApplicationCard from "../ApplicationCard/ApplicationCard"
 import "./ApplicationList.css"
 
 export default function ApplicationList({ applications, onUpdate }) {
