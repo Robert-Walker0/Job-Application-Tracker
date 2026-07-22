@@ -252,3 +252,47 @@ def test_get_all_job_applications_flags_inactive(test_database):
     )
     assert active_record["is_inactive"] == 0
     assert stale_record["is_inactive"] == 1
+
+
+def test_add_interview_round(test_database):
+    """Tests adding an interview round for an existing application."""
+    application_id = database.add_job_application(APPLICATION_DATA)
+    round_id = database.add_interview_round(
+        application_id, "Phone Screen", "2026-07-20", "Went well"
+    )
+    conn = database.create_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM interview_rounds WHERE id = ?", (round_id,))
+    row = cursor.fetchone()
+    conn.close()
+    assert row is not None
+    assert row["application_id"] == application_id
+    assert row["round_label"] == "Phone Screen"
+    assert row["round_date"] == "2026-07-20"
+    assert row["notes"] == "Went well"
+
+
+def test_add_interview_round_invalid_application(test_database):
+    """Tests that adding a round for a nonexistent application raises RuntimeError."""
+    with pytest.raises(RuntimeError):
+        database.add_interview_round(9999, "Phone Screen", "2026-07-20", "")
+
+
+def test_get_interview_rounds_multiple(test_database):
+    """Tests that multiple rounds for one application are all returned, ordered by date."""
+    application_id = database.add_job_application(APPLICATION_DATA)
+    database.add_interview_round(application_id, "Phone Screen", "2026-07-10", "")
+    database.add_interview_round(application_id, "Onsite", "2026-07-20", "")
+    rounds = database.get_interview_rounds(application_id)
+
+    assert len(rounds) == 2
+    assert rounds[0]["round_label"] == "Phone Screen"
+    assert rounds[1]["round_label"] == "Onsite"
+
+
+def test_get_interview_rounds_empty(test_database):
+    """Tests that an application with no rounds returns an empty list."""
+    application_id = database.add_job_application(APPLICATION_DATA)
+    rounds = database.get_interview_rounds(application_id)
+
+    assert rounds == []
