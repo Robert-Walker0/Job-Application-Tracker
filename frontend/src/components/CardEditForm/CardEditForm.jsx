@@ -5,6 +5,24 @@ export default function CardEditForm({ editData, onFieldChange }) {
         <div className="edit-grid">
             <EditField label="Company" fieldName="company" editData={editData} onFieldChange={onFieldChange} />
             <EditField label="Job Title" fieldName="jobTitle" editData={editData} onFieldChange={onFieldChange} />
+            <EditField label="Location" fieldName="location" editData={editData} onFieldChange={onFieldChange}/>
+            <div className="card-field">
+                <label className="card-label">Priority</label>
+                <select value={editData.priority} onChange={e => onFieldChange("priority", e.target.value)}>
+                    <option value="None">None</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                </select>
+            </div>
+            <div className="card-field">
+                <label className="card-label">Work Type</label>
+                <select value={editData.workType} onChange={e => onFieldChange("workType", e.target.value)}>
+                    <option value="On-Site">On-Site</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="Remote">Remote</option>
+                </select>
+            </div>
             <EditField label="Date Applied" fieldName="dateApplied" type="date" editData={editData} onFieldChange={onFieldChange} />
             <EditField label="Platform" fieldName="platform" type="text" editData={editData} onFieldChange={onFieldChange}/>
             <EditField label="Link" fieldName="link" type="url" editData={editData} onFieldChange={onFieldChange} />
@@ -30,6 +48,7 @@ export default function CardEditForm({ editData, onFieldChange }) {
                 </select>
             </div>
             <EditField label="Last Heard From" fieldName="lastHeardFrom" type="date" editData={editData} onFieldChange={onFieldChange}/>
+            <EditField label="Resume Name" fieldName="resumeName" editData={editData} onFieldChange={onFieldChange}/>
             <EditField className="card-notes" label="Notes" fieldName="notes" type="text" editData={editData} onFieldChange={onFieldChange}/>
         </div>
     );
