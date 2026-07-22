@@ -1,0 +1,31 @@
+.add-round-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background-color: #1a1a2e;
+    border: 1px solid #0f3460;
+    border-radius: 4px;
+    padding: 0.75rem;
+}
+.add-round-form input,
+.add-round-form textarea {
+    background-color: #16213e;
+    color: #ffffff;
+    border: 1px solid #0f3460;
+    border-radius: 4px;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+}
+.add-round-submit-btn {
+    align-self: flex-start;
+    background-color: #0f3460;
+    color: #e0e0e0;
+    border: 1px solid #533483;
+    border-radius: 4px;
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+}
+.add-round-submit-btn:hover {
+    background-color: #533483;
+}

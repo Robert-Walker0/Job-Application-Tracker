@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import "./ApplicationCard.css";
+import InterviewRoundsTab from '../InterviewRoundsTab/InterviewRoundsTab';
 import CardEditForm from "../CardEditForm/CardEditForm";
+import CardToolbar from "../CardToolbar/CardToolbar";
 import CardDetailView from "../CardDetailView/CardDetailView";
 import TimelineTab from "../TimelineTab/TimelineTab";
 import API_BASE_URL from "../../config";
@@ -11,6 +13,7 @@ export default function ApplicationCard({ application, onClose, onUpdate }) {
     const [isLoading, setIsLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState({ ...application });
+    const [rounds, setRounds] = useState([]);
     const [activeTab, setActiveTab] = useState("Details");
 
     useEffect(() => {
@@ -30,12 +33,25 @@ export default function ApplicationCard({ application, onClose, onUpdate }) {
         fetchHistory();
     }, [application.id]);
 
+    function handleAddRound(roundData) {
+        setRounds(prev => [...prev, roundData]);
+    }
+
     function handleFieldChange(field, value) {
         setEditData(prev => ({ ...prev, [field]: value }));
     }
 
     function nothingChanged() {
         return Object.keys(editData).every(key => editData[key] === application[key]);
+    }
+
+    function handleTabChange(currentTab) {
+        if(currentTab == activeTab) return;
+
+        if(isEditing) {
+            handleCancelEdit();
+        }
+        setActiveTab(currentTab);
     }
 
     function handleCancelEdit() {
@@ -72,23 +88,18 @@ export default function ApplicationCard({ application, onClose, onUpdate }) {
                     <h2>Job Application #{application.id} — {application.company}</h2>
                     <button className="card-close-button" onClick={onClose}>✕</button>
                 </div>
-                <div className="card-toolbar">
-                    <button className="active-tab" onClick={() => null}>
-                        Details
-                    </button>
-                    <button onClick={() => null}>
-                        Interview Rounds
-                    </button>
-                    <button onClick={() => null}>
-                        Timeline
-                    </button>
-                </div>
+                <CardToolbar activeTab={activeTab} onTabChange={handleTabChange}/>
                 <div className="card-body">
-                    {isEditing ? (<CardEditForm editData={editData} onFieldChange={handleFieldChange}/>) : (<CardDetailView application={application}/>)}
-                    <div className="card-history-section">
-                        <h3 className="history-title">Application Timeline</h3>
-                        <TimelineTab history={history} isLoading={isLoading}/>
-                    </div>
+                    {activeTab === "Details" && (isEditing ? (<CardEditForm editData={editData} onFieldChange={handleFieldChange}/>) : (<CardDetailView application={application}/>))}
+                    {activeTab === "Timeline" && (
+                        <div className="card-history-section">
+                            <h3 className="history-title">Application Timeline</h3>
+                            <TimelineTab history={history} isLoading={isLoading}/>
+                        </div>
+                    )}
+                    {activeTab === "Interview Rounds" && (
+                        <InterviewRoundsTab rounds={rounds} onAddRound={handleAddRound}/>
+                    )}
                 </div>
                 <div className="card-footer">
                     {isEditing ? (
@@ -98,7 +109,7 @@ export default function ApplicationCard({ application, onClose, onUpdate }) {
                         </>
                     ) : (
                         <>
-                            <button className="card-edit-btn" onClick={() => setIsEditing(true)}>Edit</button>
+                            {activeTab === "Details" && (<button className="card-edit-btn" onClick={() => setIsEditing(true)}>Edit</button>)}
                             <button className="card-close-btn" onClick={onClose}>Close</button>
                         </>
                     )}
