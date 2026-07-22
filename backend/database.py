@@ -36,10 +36,69 @@ def create_connection() -> sqlite3.Connection:
 
 def add_interview_round(
     application_id: int, round_label: str, round_date: str, notes: str = ""
-) -> None: ...
+) -> int:
+    """Adds a new interview round for a specific application.
+
+    Args:
+        application_id (int): The unique ID of the application this round belongs to.
+        round_label (str): A custom label for the roudn (ex. "Phone Screen").
+        round_date (str): The date of the round, formatted as YYYY-MM-DD.
+        notes (str): Optional notes about the round. Defaults to an empty string.
+
+    Returns:
+        int: The unique ID of the newly created interview round.
+
+    Raises:
+        RuntimeError: If the application fails to add the round due to it not existing, failing to insert into the database, etc.
+    """
+    query = """
+    INSERT INTO interview_rounds(application_id, round_label, round_date, notes)
+    VALUES (?, ?, ?, ?)
+    """
+    connection = create_connection()
+    try:
+        cursor = connection.cursor()
+        cursor.execute(query, (application_id, round_label, round_date, notes))
+        connection.commit()
+        return cursor.lastrowid
+    except sqlite3.Error as error:
+        raise RuntimeError(
+            f"Failed to add interview round for application {application_id} due to {error}"
+        )
+    finally:
+        connection.close()
 
 
-def get_interview_rounds(application_id: int) -> list: ...
+def get_interview_rounds(application_id: int) -> list:
+    """Retrieves all interview rounds for a specific application, ordered oldest to newest.
+
+    Args:
+        application_id (int): The unique ID of the application whose rounds to fetch.
+
+    Returns:
+        list: A list of dictionaries, each containing 'id', 'round_label',
+            'round_date', and 'notes' keys.
+
+    Raises:
+        RuntimeError: If the database query fails.
+    """
+    query = """
+    SELECT id, round_label, round_date, notes
+    FROM interview_rounds
+    WHERE application_id = ?
+    ORDER BY date(round_date) ASC
+    """
+    connection = create_connection()
+    try:
+        cursor = connection.cursor()
+        cursor.execute(query, (application_id,))
+        return [dict(row) for row in cursor.fetchall()]
+    except sqlite3.Error as error:
+        raise RuntimeError(
+            f"Failed to retrieve interview rounds for application {application_id} due to {error}."
+        )
+    finally:
+        connection.close()
 
 
 def add_initial_log_entry(

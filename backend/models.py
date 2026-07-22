@@ -30,3 +30,11 @@ class JobApplicationUpdate(BaseModel):
     notes: str = None
     status: str = None
     last_heard_from: str = None
+
+
+class InterviewRound(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel_case, populate_by_name=True)
+
+    round_label: str
+    round_date: str
+    notes: str = ""

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, status
 from fastapi.responses import JSONResponse
 from utility_functions import to_camel_case_dict
-from models import JobApplication, JobApplicationUpdate
+from models import JobApplication, JobApplicationUpdate, InterviewRound
 import json, database, services
 
 router = APIRouter()
@@ -102,6 +102,39 @@ def create_application(application: JobApplication) -> JSONResponse:
         status_code=status.HTTP_201_CREATED,
         content={"message": "Application has been added successfully.", "id": new_id},
     )
+
+
+@router.post("/applications/{application_id}/interview-rounds")
+def create_interview_round(
+    application_id: int, round_data: InterviewRound
+) -> JSONResponse:
+    try:
+        new_id = database.add_interview_round(
+            application_id,
+            round_data.round_label,
+            round_data.round_date,
+            round_data.notes,
+        )
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(error)
+        )
+
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED,
+        content={"message": "Interview round added successfully.", "id": new_id},
+    )
+
+
+@router.get("/applications/{application_id}/interview-rounds")
+def get_interview_rounds(application_id: int) -> list:
+    try:
+        rounds = database.get_interview_rounds(application_id)
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(error)
+        )
+    return [to_camel_case_dict(r) for r in rounds]
 
 
 @router.get("/applications/{application_id}/history")
