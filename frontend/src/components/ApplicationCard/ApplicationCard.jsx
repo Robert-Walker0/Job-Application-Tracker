@@ -14,6 +14,7 @@ export default function ApplicationCard({ application, onClose, onUpdate }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState({ ...application });
     const [rounds, setRounds] = useState([]);
+    const [isLoadingRounds, setIsLoadingRounds] = useState(true);
     const [activeTab, setActiveTab] = useState("Details");
 
     useEffect(() => {
@@ -33,8 +34,50 @@ export default function ApplicationCard({ application, onClose, onUpdate }) {
         fetchHistory();
     }, [application.id]);
 
-    function handleAddRound(roundData) {
-        setRounds(prev => [...prev, roundData]);
+    useEffect(() => {
+        async function fetchRounds() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/applications/${application.id}/interview-rounds`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setRounds(data);
+                }
+            } catch (error) {
+                console.error("Error fetching interview rounds:", error);
+            } finally {
+                setIsLoadingRounds(false);
+            }
+        }
+        fetchRounds();
+    }, [application.id]);
+
+    async function handleAddRound(roundData) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/applications/${application.id}/interview-rounds`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    roundLabel: roundData.label,
+                    roundDate: roundData.date,
+                    notes: roundData.notes
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                setRounds(prev => [
+                    ...prev,
+                    {
+                        id: result.id,
+                        roundLabel: roundData.label,
+                        roundDate: roundData.date,
+                        notes: roundData.notes
+                    }
+                ]);
+            }
+        } catch (error) {
+            console.error("Error adding interview round:", error);
+        }
     }
 
     function handleFieldChange(field, value) {
@@ -98,7 +141,7 @@ export default function ApplicationCard({ application, onClose, onUpdate }) {
                         </div>
                     )}
                     {activeTab === "Interview Rounds" && (
-                        <InterviewRoundsTab rounds={rounds} onAddRound={handleAddRound}/>
+                        <InterviewRoundsTab rounds={rounds} isLoading={isLoadingRounds} onAddRound={handleAddRound}/>
                     )}
                 </div>
                 <div className="card-footer">
