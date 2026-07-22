@@ -9,9 +9,8 @@
 
 ## Keep track of where you apply with one application
 
-Having problems remembering where you last applied, not anymore. With this application you can keep track of every job you applied with ease. 
-Just take note of the company, role, date, hourly or salaried, last heard from, status, link, resume, and notes.  Remove any jobs after a time frame of not hearing back from them or consider them discontinued.
-
+Having problems remembering where you last applied, not anymore. With this application you can keep track of every job you applied with ease.
+From the company, role, work_type, location, date of application, pay type, pay amount, last heard from, status, link, resume name, and notes. Remove any jobs after a time frame of not hearing back from them or consider deleting them.
 
 ## Technologies
 
@@ -89,16 +88,40 @@ Environment variables were used to manage the frontend and
 backend URLs across local development and production without hardcoding
 any values.
 
-Finally, for now, an export feature was added, allowing users to download all their
-tracked applications as a JSON file — an important addition given that
+The export feature was added directly after this, allowing users to download all their
+tracked applications as a JSON file. An important addition given that
 Render’s free tier uses ephemeral storage, meaning the database resets on
 each cold start. The export feature gives users a way to preserve their
 data between sessions.
 
+To compliment the export feature, the import feature was directly created right after
+it to take in the applications that were exported. The frontend UI for the button was created
+first with a null point to activate the function that was later replaced once the backend implementation
+and its test were added. It was linked to eventually call the backend and import applications.
+
+All of the other features (inactivity flagger, application card, editing application, interview round tracking,
+application history) went through basically the same flow, but the only different during this was the frontend was
+not tested.
+
+Some change were made to the application including the folder structure to make the Components more mantainable by
+spliting their elements into multiple components instead of rendering on the same one. The backend additionally went
+through some changes to split functions with building out the log change since it became too long to read.
+
+During development I learned that SQLite does not have automatic Foreign Key Enforcement so I updated my
+`create_connection` function to use it. Some of my tests (logging) broke regarding it that had poor 
+implementation with hard coded values which I should have avoided; these were updated to now finally
+stick only with the id that the application gave out.
+
+Deleting applications as a mentioned featured made in late to the application itself along with location of the
+application and whether it was remote or not. Which is currently the next additions to the app.
+
+More content to this dev log while be added once the development finishes for the Filter Bar, Delete Applications
+and Settings which is when the final part of this application should be done before touch up. 
+
 ## Planned Features
-- Application history log display
-- Interview round tracking
 - Customizable color schema settings
+- Fliter Bar
+- Delete Applications
 
 ## What I Learned
 
