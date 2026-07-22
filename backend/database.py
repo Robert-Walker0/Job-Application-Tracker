@@ -29,9 +29,17 @@ def create_connection() -> sqlite3.Connection:
         connection: a sqlite3.Connection configured database connection.
     """
     connection = sqlite3.connect(DATABASE_PATH)
-
+    connection.execute("PRAGMA foreign_keys = ON")
     connection.row_factory = sqlite3.Row
     return connection
+
+
+def add_interview_round(
+    application_id: int, round_label: str, round_date: str, notes: str = ""
+) -> None: ...
+
+
+def get_interview_rounds(application_id: int) -> list: ...
 
 
 def add_initial_log_entry(
@@ -190,39 +198,6 @@ def get_all_job_applications() -> list:
         con.close()
 
     return applications
-
-
-def get_application_logs(application_id: int) -> list:
-    """Retrieves all history logs for a specific application, ordered oldest to newest.
-
-    Args:
-        application_id: The unique ID (int) of the application whose logs to fetch.
-
-    Returns:
-        logs: A list of dictionaries containing 'log_date' and 'event' keys.
-
-    Raises:
-        RuntimeError: If the database query fails.
-    """
-    log_query = """
-    SELECT log_date, log_time, event 
-    FROM job_application_log 
-    WHERE application_id = ? 
-    ORDER BY datetime(log_date || ' ' || log_time) ASC
-    """
-    con = create_connection()
-    try:
-        cursor = con.cursor()
-        cursor.execute(log_query, (application_id,))
-        logs = [dict(row) for row in cursor.fetchall()]
-    except sqlite3.Error as error:
-        raise RuntimeError(
-            f"Failed to retrieve logs for application {application_id} due to {error}."
-        )
-    finally:
-        con.close()
-
-    return logs
 
 
 def get_application_logs(application_id: int) -> list:
