@@ -161,15 +161,16 @@ def add_job_application(application_data: tuple, history: list = None) -> int:
     Inserts a new job application into the database and logs the initial 'Applied' status.
 
     Args:
-    application_data: Tuple containing (company, job_title, date_applied,
-    platform, link, pay_type, pay_amount, notes, status, last_heard_from)
+    application_data: Tuple containing (company, job_title, location, priority,
+    work_type, date_applied, platform, link, pay_type, pay_amount, resume_name,
+    notes, status, last_heard_from)
 
     Raise:
     RuntimeError: If the database insert or logging fails.
     """
     application_query = """
-    INSERT INTO job_applications(company, job_title, date_applied, platform, link, pay_type, pay_amount, notes, status, last_heard_from)    
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO job_applications(company, job_title, location, priority, work_type, date_applied, platform, link, pay_type, pay_amount, resume_name, notes, status, last_heard_from)    
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
     with sqlite3.connect(DATABASE_PATH) as connection:
         cursor = connection.cursor()
