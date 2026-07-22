@@ -8,11 +8,15 @@ export default function ApplicationForm({ onSubmit, onClose }) {
 
     const [company, setCompany] = useState("");
     const [jobTitle, setJobTitle] = useState("");
+    const [location, setLocation] = useState("");
+    const [priority, setPriority] = useState("Low");
+    const [workType, setWorkType] = useState("On-Site");
     const [dateApplied, setDateApplied] = useState(today);
     const [platform, setPlatform] = useState("");
     const [link, setLink] = useState("");
     const [payType, setPayType] = useState("Contract");
     const [payAmount, setPayAmount] = useState("");
+    const [resumeName, setResumeName] = useState("");
     const [notes, setNotes] = useState("");
     const [status, setStatus] = useState("Applied");
     const [lastHeardFrom, setLastHeardFrom] = useState(today);
@@ -23,6 +27,9 @@ export default function ApplicationForm({ onSubmit, onClose }) {
         const newApplication = {
             company,
             jobTitle,
+            location,
+            priority,
+            workType,
             dateApplied,
             platform,
             link,
@@ -30,6 +37,7 @@ export default function ApplicationForm({ onSubmit, onClose }) {
             payAmount,
             status,
             lastHeardFrom,
+            resumeName,
             notes
         }
 
@@ -47,12 +55,16 @@ export default function ApplicationForm({ onSubmit, onClose }) {
             <form onSubmit={handleSubmit}>
                 <FormInput label="Company *" value={company} onChange={e => setCompany(e.target.value)} required/>
                 <FormInput label="Job Title *" value={jobTitle} onChange={e => setJobTitle(e.target.value)} required/>
+                <FormInput label="Location" value={location} onChange={e => setLocation(e.target.value)}/>
+                <FormSelect label="Priority" value={priority} onChange={e => setPriority(e.target.value)} options={["None", "Low", "Medium", "High"]}/>
+                <FormSelect label="Work Type" value={workType} onChange={e => setWorkType(e.target.value)} options={["On-Site", "Hybrid", "Remote"]}/>  
                 <FormInput label="Date Applied *" value={dateApplied} type="date" onChange={e => setDateApplied(e.target.value)} required/>
                 <FormInput label="Platform" value={platform} onChange={e => setPlatform(e.target.value)}/>
                 <FormInput label="Job Posting Link" value={link} type="url" onChange={e => setLink(e.target.value)}/>
                 <FormSelect label="Pay Type *" value={payType} onChange={e => setPayType(e.target.value)} options={["Contract", "Hourly", "Salaried", "Internship"]} required/>
                 <FormInput label="Pay Amount *" value={payAmount} type="number" onChange={e => setPayAmount(e.target.value)} required/>
                 <FormInput label="Last Heard From" value={lastHeardFrom} type="date" onChange={e => setLastHeardFrom(e.target.value)}/>
+                <FormInput label="Resume Name" value={resumeName} onChange={e => setResumeName(e.target.value)}/>
                 <div className="form-field">
                     <label>Notes</label>
                     <textarea placeholder="Place notes here" value={notes} onChange={e => setNotes(e.target.value)}/>

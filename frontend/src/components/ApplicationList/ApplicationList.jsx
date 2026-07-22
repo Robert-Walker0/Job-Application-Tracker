@@ -15,6 +15,9 @@ export default function ApplicationList({ applications, onUpdate }) {
                         <tr>
                             <th>Company</th>
                             <th>Job Title</th>
+                            <th>Location</th>
+                            <th>Priority</th>
+                            <th>Work Type</th>
                             <th>Date Applied</th>
                             <th>Platform</th>
                             <th>Link</th>
@@ -34,6 +37,9 @@ export default function ApplicationList({ applications, onUpdate }) {
                             >
                                 <td>{application.company}</td>
                                 <td>{application.jobTitle}</td>
+                                <td>{application.location}</td>
+                                <td>{application.priority}</td>
+                                <td>{application.workType}</td>
                                 <td>{application.dateApplied}</td>
                                 <td>{application.platform || "N/A"}</td>
                                 <td>{application.link}</td>
