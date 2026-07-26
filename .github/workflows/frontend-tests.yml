@@ -1,0 +1,25 @@
+name: Test Frontend
+
+on: [push, pull_request]
+
+jobs:
+    tests:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v7
+            
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                node-version: "20"
+
+            - name: Install Dependencies
+              run: |
+               cd frontend
+               npm install
+
+            - name: Run Vitest
+              run: |
+                cd frontend
+                npm test
