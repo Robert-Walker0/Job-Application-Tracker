@@ -136,13 +136,10 @@ def test_get_application_invalid_id_type():
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
-def test_export_applications_json_success(monkeypatch):
+def test_export_applications_json_success():
     """Test that exporting data returns the correct headers and data payload."""
-    mock_data = [{"id": 1, "company_name": "Google", "job_title": "Software Engineer"}]
-    monkeypatch.setattr(
-        "routes.applications.database.get_all_job_applications", lambda: mock_data
-    )
-    monkeypatch.setattr("routes.applications.to_camel_case_dict", lambda x: x)
+    create_response = client.post(APPLICATIONS_URL, json=VALID_APPLICATIONS[0])
+    application_id = create_response.json()["id"]
     filename = "my_custom_backup"
     response = client.get(f"{EXPORT_URL}?filename={filename}")
     assert response.status_code == status.HTTP_200_OK
@@ -155,7 +152,8 @@ def test_export_applications_json_success(monkeypatch):
     )
     json_data = response.json()
     assert len(json_data) == 1
-    assert json_data[0]["company_name"] == "Google"
+    assert json_data[0]["id"] == application_id
+    assert json_data[0]["company"] == "Google"
 
 
 def test_export_applications_json_empty_database(monkeypatch):
@@ -306,3 +304,73 @@ def test_update_job_application_by_id_logs_history(application_payload):
     history = history_response.json()
     assert len(history) > 0
     assert any("Status" in entry["event"] for entry in history)
+
+
+def test_delete_application_success():
+    response = client.post(APPLICATIONS_URL, json=VALID_APPLICATIONS[0])
+    application_id = response.json()["id"]
+
+    response = client.delete(f"{APPLICATIONS_URL}/{application_id}")
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.json()["id"] == application_id
+
+
+def test_delete_application_not_found():
+    response = client.delete(f"{APPLICATIONS_URL}/9999")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_delete_all_applications():
+    create_response = [
+        client.post(APPLICATIONS_URL, json=VALID_APPLICATIONS[0]),
+        client.post(APPLICATIONS_URL, json=VALID_APPLICATIONS[1]),
+    ]
+
+    assert all(response.status_code == 201 for response in create_response)
+    assert all("id" in response.json() for response in create_response)
+
+    delete_response = client.delete(f"{APPLICATIONS_URL}/all")
+    assert delete_response.status_code == status.HTTP_204_NO_CONTENT
+    response = client.get(APPLICATIONS_URL)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
+
+
+def test_delete_all_applications_then_404_on_old_id():
+    create_responses = [
+        client.post(APPLICATIONS_URL, json=VALID_APPLICATIONS[0]),
+        client.post(APPLICATIONS_URL, json=VALID_APPLICATIONS[1]),
+    ]
+    application_ids = [r.json()["id"] for r in create_responses]
+
+    delete_response = client.delete(f"{APPLICATIONS_URL}/all")
+    assert delete_response.status_code == status.HTTP_204_NO_CONTENT
+
+    for application_id in application_ids:
+        response = client.get(f"{APPLICATIONS_URL}/{application_id}")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_delete_application_removes_rounds_and_history_via_cascade():
+    response = client.post(APPLICATIONS_URL, json=VALID_APPLICATIONS[0])
+    application_id = response.json()["id"]
+
+    client.post(
+        f"{APPLICATIONS_URL}/{application_id}/interview-rounds",
+        json={"roundLabel": "Phone Screen", "roundDate": "2026-07-20", "notes": ""},
+    )
+
+    rounds_before = client.get(f"{APPLICATIONS_URL}/{application_id}/interview-rounds")
+    history_before = client.get(f"{APPLICATIONS_URL}/{application_id}/history")
+    assert len(rounds_before.json()) > 0
+    assert len(history_before.json()) > 0
+
+    delete_response = client.delete(f"{APPLICATIONS_URL}/{application_id}")
+    assert delete_response.status_code == status.HTTP_204_NO_CONTENT
+
+    rounds_after = client.get(f"{APPLICATIONS_URL}/{application_id}/interview-rounds")
+    history_after = client.get(f"{APPLICATIONS_URL}/{application_id}/history")
+    assert rounds_after.status_code == status.HTTP_404_NOT_FOUND
+    assert history_after.status_code == status.HTTP_404_NOT_FOUND

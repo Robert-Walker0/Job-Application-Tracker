@@ -212,10 +212,14 @@ def get_interview_rounds(application_id: int) -> list:
         list: Returns a list of rounds for that job application.
 
     Raises:
-        HTTPException 500: If the application or rounds couldn't be fetched from the server.
+        HTTPExceptoin 400: If the application for the rounds couldn't be found.
+        HTTPException 500: If the rounds couldn't be fetched from the server.
     """
+
     try:
         rounds = database.get_interview_rounds(application_id)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
     except RuntimeError as error:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(error)
@@ -234,10 +238,13 @@ def get_application_history(application_id: int) -> list:
         list: A list of the logs messaages for that job application.
 
     Raises:
+        HTTPExceptoin 400: If application does not exist.
         HTTPException 500: If the application was failed to be fetched from the server.
     """
     try:
         logs = database.get_application_logs(application_id)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
     except Exception as error:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -285,3 +292,40 @@ def update_job_application_by_id(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(error)
         )
+
+
+@router.delete("/applications/all")
+def delete_all_job_applications():
+    try:
+        deleted_count = database.delete_all_job_applications()
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(error)
+        )
+
+    return JSONResponse(
+        status_code=status.HTTP_204_NO_CONTENT,
+        content={
+            "message": "All applications deleted successfully.",
+            "count": deleted_count,
+        },
+    )
+
+
+@router.delete("/applications/{application_id}")
+def delete_job_application_by_id(application_id: int) -> JSONResponse:
+    try:
+        deleted_id = database.delete_job_application_by_id(application_id)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(error)
+        )
+
+    return JSONResponse(
+        status_code=status.HTTP_204_NO_CONTENT,
+        content={"message": "Application deleted successfully.", "id": deleted_id},
+    )

@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS interview_rounds(
     round_label TEXT NOT NULL,
     round_date TEXT NOT NULL,
     notes TEXT,
-    FOREIGN KEY (application_id) REFERENCES job_applications(id)
+    FOREIGN KEY (application_id) REFERENCES job_applications(id) ON DELETE CASCADE 
 );
 
 CREATE TABLE IF NOT EXISTS job_application_log(
@@ -31,5 +31,5 @@ CREATE TABLE IF NOT EXISTS job_application_log(
     log_date TEXT NOT NULL,
     log_time TEXT NOT NULL,
     event TEXT NOT NULL,
-    FOREIGN KEY (application_id) REFERENCES job_applications(id)
+    FOREIGN KEY (application_id) REFERENCES job_applications(id) ON DELETE CASCADE 
 );

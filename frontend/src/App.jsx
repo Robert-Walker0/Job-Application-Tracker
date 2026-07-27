@@ -15,7 +15,7 @@ function App() {
     status: "",
     searchText: "",
     priority: "",
-    IsInactive: false,
+    isInactive: false,
     minPay: 0,
     maxPay: 0,
     dateFrom: "",
@@ -31,6 +31,49 @@ function App() {
     .then(res => res.json())
     .then(data => setApplications(data))
   }, []);
+
+  async function handleDeleteApplication(applicationId) {
+    const confirmed = window.confirm(
+        "Are you sure you want to delete this application?"
+    );
+
+    if (!confirmed) return;
+
+    const response = await fetch(
+        `${API_BASE_URL}/applications/${applicationId}`,
+        {
+            method: "DELETE"
+        }
+    );
+
+    if(!response.ok) {
+        throw new Error("Failed to delete application.");
+    }
+
+    fetch(localDBApplications)
+        .then(res => res.json())
+        .then(data => setApplications(data));
+  }
+
+  async function handleDeleteAllApplications() {
+    const confirmed = window.confirm(
+        "Are you sure you want to permanently delete every job application?"
+    );
+
+    if(!confirmed) return;
+
+    const response = await fetch(`${API_BASE_URL}/applications/all`, {
+        method: "DELETE"
+    });
+
+    if(!response.ok) {
+        throw new Error("Failed to delete all job applications.");
+    }
+
+    fetch(localDBApplications)
+        .then(res => res.json())
+        .then(data => setApplications(data));
+  }
 
   function handleClearFilters() {
     setFilters({
@@ -93,7 +136,6 @@ function App() {
 
             if (response.ok) {
                 setImportMessage(data.message);
-                // Refresh the applications list after import
                 fetch(localDBApplications)
                     .then(res => res.json())
                     .then(data => setApplications(data));
@@ -117,6 +159,9 @@ function App() {
             <button onClick={() => setShowForm(!showForm)}>Add Job</button>
             <button onClick={handleExportJSON} disabled={applications.length === 0}>Export All Jobs</button>
             <button onClick={() => document.getElementById("import-input").click()}>Import Jobs</button>
+            <button onClick={handleDeleteAllApplications} disabled={applications.length === 0}>
+                Delete All Job
+            </button>
             <input id="import-input" type="file" accept=".json" style={{ display: "none" }} onChange={handleImportJSON}/>
         </div>
         {importMessage && <p>{importMessage}</p>}
@@ -125,6 +170,7 @@ function App() {
         <div className="app-content">
             <ApplicationList 
                 applications={filteredApplications} 
+                onDelete={handleDeleteApplication}
                 onUpdate={() => {
                     fetch(localDBApplications)
                     .then(res => res.json())
