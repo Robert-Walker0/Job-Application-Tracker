@@ -308,3 +308,74 @@ def test_get_interview_rounds_empty(test_database):
     rounds = database.get_interview_rounds(application_id)
 
     assert rounds == []
+
+
+def test_delete_job_application_by_id(test_database):
+    """Tests that deleting an application by id removes it and returns its id."""
+    application_id = database.add_job_application(APPLICATION_DATA)
+
+    deleted_id = database.delete_job_application_by_id(application_id)
+
+    assert deleted_id == application_id
+
+    conn = database.create_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM job_applications WHERE id = ?", (application_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    assert row is None
+
+
+def test_delete_job_application_cascades_to_rounds_and_history(test_database):
+    """Tests that deleting an application also removes its interview rounds and log entries via CASCADE."""
+    application_id = database.add_job_application(APPLICATION_DATA)
+    database.add_interview_round(application_id, "Phone Screen", "2026-07-10", "")
+
+    database.delete_job_application_by_id(application_id)
+
+    conn = database.create_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT * FROM interview_rounds WHERE application_id = ?", (application_id,)
+    )
+    rounds = cursor.fetchall()
+    cursor.execute(
+        "SELECT * FROM job_application_log WHERE application_id = ?", (application_id,)
+    )
+    logs = cursor.fetchall()
+    conn.close()
+
+    assert rounds == []
+    assert logs == []
+
+
+def test_delete_job_application_by_id_not_found(test_database):
+    """Tests that deleting a nonexistent application id raises ValueError."""
+    with pytest.raises(ValueError):
+        database.delete_job_application_by_id(9999)
+
+
+def test_delete_all_job_applications(test_database):
+    """Tests that deleting all applications empties the table and returns the deleted count."""
+    database.add_job_application(APPLICATION_DATA)
+    database.add_job_application(APPLICATION_DATA)
+    database.add_job_application(APPLICATION_DATA)
+
+    deleted_count = database.delete_all_job_applications()
+
+    assert deleted_count == 3
+
+    conn = database.create_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM job_applications")
+    rows = cursor.fetchall()
+    conn.close()
+
+    assert rows == []
+
+
+def test_delete_all_job_applications_when_empty(test_database):
+    """Tests that deleting all applications when the table is already empty returns 0, not an error."""
+    deleted_count = database.delete_all_job_applications()
+    assert deleted_count == 0
