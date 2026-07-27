@@ -82,6 +82,8 @@ def get_interview_rounds(application_id: int) -> list:
     Raises:
         RuntimeError: If the database query fails.
     """
+    get_job_application_by_id(application_id)
+
     query = """
     SELECT id, round_label, round_date, notes
     FROM interview_rounds
@@ -272,6 +274,8 @@ def get_application_logs(application_id: int) -> list:
     Raises:
         RuntimeError: If the database query fails.
     """
+    get_job_application_by_id(application_id)
+
     log_query = """
     SELECT log_date, log_time, event 
     FROM job_application_log 
@@ -319,6 +323,59 @@ def update_job_application(application_id: int, updated_fields: dict) -> dict:
     finally:
         connection.close()
     return get_job_application_by_id(application_id)
+
+
+def delete_job_application_by_id(application_id: int) -> int:
+    """Deletes a single job application entry by its ID.
+    Args:
+        application_id (int): The job application's ID to be deleted.
+    Returns:
+        int: the application of the previously deleted application.
+    """
+    query = """
+    DELETE from job_applications WHERE id = ?
+    """
+    connection = create_connection()
+    try:
+        cursor = connection.cursor()
+        cursor.execute(query, (application_id,))
+        if cursor.rowcount == 0:
+            raise ValueError(f"No application found with id {application_id}.")
+
+        connection.commit()
+        return application_id
+    except sqlite3.Error as error:
+        connection.rollback()
+        raise RuntimeError(
+            f"Failed to delete application no.{application_id} due to {error}."
+        )
+    finally:
+        connection.close()
+
+
+def delete_all_job_applications() -> int:
+    """Deletes every job application from the database.
+
+    Returns:
+        int: The number of job applications deleted.
+
+    Raises:
+        RuntimeError: If the database delete fails.
+    """
+    connection = create_connection()
+    try:
+        cursor = connection.cursor()
+        #   cursor.execute("DELETE FROM interview_rounds")
+        #   cursor.execute("DELETE FROM job_application_log")
+        cursor.execute("DELETE FROM job_applications")
+        deleted_count = cursor.rowcount
+        connection.commit()
+        return deleted_count
+    except sqlite3.Error as error:
+        connection.rollback()
+        raise RuntimeError(f"Failed to delete all applications due to {error}.")
+    finally:
+        connection.close()
 
 
 if __name__ == "__main__":
