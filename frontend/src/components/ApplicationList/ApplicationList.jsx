@@ -1,16 +1,27 @@
-import { useState } from "react"
-import ApplicationCard from "../ApplicationCard/ApplicationCard"
-import "./ApplicationList.css"
+import { useState } from "react";
+import ApplicationCard from "../ApplicationCard/ApplicationCard";
+import "./ApplicationList.css";
 
-export default function ApplicationList({ applications, onUpdate }) {
-    const [selectedApplication, setSelectedApplication] = useState(null)
+export default function ApplicationList({
+    applications,
+    onUpdate,
+    onDelete,
+}) {
+    const [selectedApplication, setSelectedApplication] = useState(null);
+    const [contextMenu, setContextMenu] = useState(null);
 
     return (
-        <div className="application-table-container">
+        <div
+            className="application-table-container"
+            // Close the menu if the user clicks elsewhere.
+            onClick={() => setContextMenu(null)}
+        >
             <h2>Current Tracked Applications ({applications.length})</h2>
-            {applications.length === 0
-                ? <h3 className="no-applications">No jobs being tracked</h3>
-                : <table className="application-table">
+
+            {applications.length === 0 ? (
+                <h3 className="no-applications">No jobs being tracked</h3>
+            ) : (
+                <table className="application-table">
                     <thead>
                         <tr>
                             <th>Company</th>
@@ -27,13 +38,31 @@ export default function ApplicationList({ applications, onUpdate }) {
                             <th>Last Heard From</th>
                         </tr>
                     </thead>
+
                     <tbody>
-                        {applications.map(application => (
+                        {applications.map((application) => (
                             <tr
                                 key={application.id}
-                                onClick={() => setSelectedApplication(application)}
-                                className={`application-table-row ${application.isInactive ? "highlight-inactive" : ""}`}
+                                className={`application-table-row ${
+                                    application.isInactive
+                                        ? "highlight-inactive"
+                                        : ""
+                                }`}
                                 style={{ cursor: "pointer" }}
+
+                                onClick={() =>
+                                    setSelectedApplication(application)
+                                }
+
+                                onContextMenu={(event) => {
+                                    event.preventDefault();
+
+                                    setContextMenu({
+                                        x: event.pageX,
+                                        y: event.pageY,
+                                        application,
+                                    });
+                                }}
                             >
                                 <td>{application.company}</td>
                                 <td>{application.jobTitle}</td>
@@ -51,7 +80,34 @@ export default function ApplicationList({ applications, onUpdate }) {
                         ))}
                     </tbody>
                 </table>
-            }
+            )}
+            {contextMenu && (
+                <div
+                    className="context-menu"
+                    style={{
+                        position: "absolute",
+                        top: contextMenu.y,
+                        left: contextMenu.x,
+                    }}
+                    onClick={(event) => event.stopPropagation()}
+                >
+                    <button
+                        onClick={() => {
+                            const confirmed = window.confirm(
+                                "Are you sure you want to delete this application?"
+                            );
+
+                            if (confirmed) {
+                                onDelete(contextMenu.application.id);
+                            }
+
+                            setContextMenu(null);
+                        }}
+                    >
+                        Delete
+                    </button>
+                </div>
+            )}
 
             {selectedApplication && (
                 <ApplicationCard
@@ -64,5 +120,5 @@ export default function ApplicationList({ applications, onUpdate }) {
                 />
             )}
         </div>
-    )
+    );
 }
