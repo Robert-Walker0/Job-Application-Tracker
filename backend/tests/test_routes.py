@@ -312,7 +312,7 @@ def test_delete_application_success():
 
     response = client.delete(f"{APPLICATIONS_URL}/{application_id}")
 
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_200_OK
     assert response.json()["id"] == application_id
 
 
@@ -331,7 +331,7 @@ def test_delete_all_applications():
     assert all("id" in response.json() for response in create_response)
 
     delete_response = client.delete(f"{APPLICATIONS_URL}/all")
-    assert delete_response.status_code == status.HTTP_204_NO_CONTENT
+    assert delete_response.status_code == status.HTTP_200_OK
     response = client.get(APPLICATIONS_URL)
 
     assert response.status_code == status.HTTP_200_OK
@@ -346,7 +346,7 @@ def test_delete_all_applications_then_404_on_old_id():
     application_ids = [r.json()["id"] for r in create_responses]
 
     delete_response = client.delete(f"{APPLICATIONS_URL}/all")
-    assert delete_response.status_code == status.HTTP_204_NO_CONTENT
+    assert delete_response.status_code == status.HTTP_200_OK
 
     for application_id in application_ids:
         response = client.get(f"{APPLICATIONS_URL}/{application_id}")
@@ -368,7 +368,7 @@ def test_delete_application_removes_rounds_and_history_via_cascade():
     assert len(history_before.json()) > 0
 
     delete_response = client.delete(f"{APPLICATIONS_URL}/{application_id}")
-    assert delete_response.status_code == status.HTTP_204_NO_CONTENT
+    assert delete_response.status_code == status.HTTP_200_OK
 
     rounds_after = client.get(f"{APPLICATIONS_URL}/{application_id}/interview-rounds")
     history_after = client.get(f"{APPLICATIONS_URL}/{application_id}/history")
