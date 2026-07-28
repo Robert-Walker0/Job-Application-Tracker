@@ -5,7 +5,7 @@ import sqlite3
 import database
 
 
-def process_application_import(application_data: List[Dict]) -> Tuple[int, int]:
+def process_application_import(applications: List[Dict]) -> Tuple[int, int]:
     """
     Validates and imports a list of raw dictionaries into the database.
 
@@ -15,21 +15,23 @@ def process_application_import(application_data: List[Dict]) -> Tuple[int, int]:
     This function does not raise anay errors despite using them.
 
     Args:
-     application_data (List[Dict]): A list of dictonaries containing job applications.
+     applications (List[Dict]): A list of dictonaries containing job applications.
 
     Returns:
      Tuple[int, int]: The first int is the number of passed imports and the second number is the number of failed imports.
     """
     imported_count, failed_count = 0, 0
 
-    for raw_app in application_data:
+    for job in applications:
         try:
-            app_model = JobApplication(**raw_app)
+            app_model = JobApplication(**job)
             app_values = tuple(app_model.model_dump().values())
-            history = raw_app.get("history", [])
+            history = job.get("history", [])
             database.add_job_application(app_values, history)
             imported_count += 1
-        except Exception as e:
+        except ValidationError:
             failed_count += 1
+        except sqlite3.Error as error:
+            raise sqlite3.Error(f"Database import failed: {error}")
 
     return imported_count, failed_count
