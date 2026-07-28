@@ -374,3 +374,36 @@ def test_delete_application_removes_rounds_and_history_via_cascade():
     history_after = client.get(f"{APPLICATIONS_URL}/{application_id}/history")
     assert rounds_after.status_code == status.HTTP_404_NOT_FOUND
     assert history_after.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_export_then_import_preserves_interview_rounds():
+    create_response = client.post(APPLICATIONS_URL, json=VALID_APPLICATIONS[0])
+    application_id = create_response.json()["id"]
+
+    client.post(
+        f"{APPLICATIONS_URL}/{application_id}/interview-rounds",
+        json={
+            "roundLabel": "Phone Screen",
+            "roundDate": "2026-07-20",
+            "notes": "Went well",
+        },
+    )
+
+    export_response = client.get(EXPORT_URL)
+    exported_data = export_response.json()
+    assert len(exported_data[0]["round"]) == 1
+
+    client.delete(f"{APPLICATIONS_URL}/all")
+
+    import_response = client.post(
+        IMPORT_URL,
+        files=utility_functions.make_json_file(exported_data),
+    )
+    assert import_response.status_code == status.HTTP_201_CREATED
+    assert "1 imported" in import_response.json()["message"]
+
+    new_applications = database.get_all_job_applications()
+    print(new_applications)
+    new_rounds = database.get_interview_rounds(new_applications[0]["id"])
+    assert len(new_rounds) == 1
+    assert new_rounds[0]["round_label"] == "Phone Screen"
