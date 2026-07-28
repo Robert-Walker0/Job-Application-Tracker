@@ -84,8 +84,15 @@ export default function ApplicationCard({ application, onClose, onUpdate }) {
         setEditData(prev => ({ ...prev, [field]: value }));
     }
 
+    function valuesAreEqual(a, b) {
+        if (typeof a === "string" && typeof b === "string") {
+            return a.trim() === b.trim();
+        }
+
+        return a === b;
+    }
     function nothingChanged() {
-        return Object.keys(editData).every(key => editData[key] === application[key]);
+        return Object.keys(editData).every(key => valuesAreEqual(editData[key], application[key]));
     }
 
     function handleTabChange(currentTab) {
