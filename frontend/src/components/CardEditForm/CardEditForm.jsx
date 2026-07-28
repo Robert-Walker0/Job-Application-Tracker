@@ -40,7 +40,7 @@ export default function CardEditForm({ editData, onFieldChange }) {
                 <label className="card-label">Status</label>
                 <select value={editData.status} onChange={e => onFieldChange("status", e.target.value)}>
                     <option value="Applied">Applied</option>
-                    <option value="Phone Screen">Phone Screen</option>
+                    <option value="Screening">Phone Screen</option>
                     <option value="Interview">Interview</option>
                     <option value="Offer">Offer</option>
                     <option value="Rejected">Rejected</option>
