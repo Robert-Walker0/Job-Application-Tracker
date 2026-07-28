@@ -73,11 +73,7 @@ def export_applications_json(filename: str = "job_applications") -> JSONResponse
             detail="No job applications found to export.",
         )
 
-    export_data = []
-    for app in applications:
-        converted = to_camel_case_dict(app)
-        converted["history"] = database.get_application_logs(app["id"])
-        export_data.append(converted)
+    export_data = [services.build_export_record(app) for app in applications]
 
     return JSONResponse(
         content=export_data,
@@ -127,7 +123,7 @@ async def import_applications_json(file: UploadFile = File(...)) -> JSONResponse
             detail="Invalid file structure. Expected a list of applications.",
         )
 
-    imported_count, failed_count = services.process_application_import(
+    imported_count, failed_count = services.process_application_imports(
         applications_data
     )
 
