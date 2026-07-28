@@ -243,7 +243,7 @@ def get_all_job_applications() -> list:
     query = """
     SELECT *, 
            CASE 
-               WHEN status = 'Applied' 
+               WHEN status NOT IN ('Offer', 'Rejected', 'Withdrawn')
                 AND (julianday('now') - julianday(COALESCE(last_heard_from, date_applied))) >= 14 
                THEN 1 
                ELSE 0 
