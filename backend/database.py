@@ -243,7 +243,8 @@ def get_all_job_applications() -> list:
     query = """
     SELECT *, 
            CASE 
-               WHEN status = 'Applied' AND (julianday('now') - julianday(date_applied)) >= 14 
+               WHEN status = 'Applied' 
+                AND (julianday('now') - julianday(COALESCE(last_heard_from, date_applied))) >= 14 
                THEN 1 
                ELSE 0 
            END as is_inactive
