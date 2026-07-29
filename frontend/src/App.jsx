@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react"
-import ApplicationForm from './components/ApplicationForm/ApplicationForm'
-import ApplicationList from './components/ApplicationList/ApplicationList'
-import FilterBar from "./components/FilterBar/FilterBar"
-import API_BASE_URL from "./config" 
-import { filterApplications } from "./components/utils/filterApplications"
+import { useState, useEffect } from "react";
+import ApplicationForm from './components/ApplicationForm/ApplicationForm';
+import ApplicationList from './components/ApplicationList/ApplicationList';
+import FilterBar from "./components/FilterBar/FilterBar";
+import API_BASE_URL from "./config" ;
+import { filterApplications } from "./components/utils/filterApplications";
 import './App.css'
 
 
@@ -22,14 +22,27 @@ function App() {
     dateTo: ""
   });
 
+  const DEFAULT_EXPORT_FILENAME = "job_applications";
   const localDBApplications = `${API_BASE_URL}/applications`;
   const filteredApplications = filterApplications(applications, filters);
 
 
   useEffect(() => {
-    fetch(localDBApplications)
-    .then(res => res.json())
-    .then(data => setApplications(data))
+    async function loadApplications() {
+        try {
+            const response = await fetch(localDBApplications);
+
+            if(!response.ok) {
+                throw new Error("Failed to load applciations");
+            }
+
+            const data = await response.json();
+            setApplications(data)
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    loadApplications();
   }, []);
 
   async function handleDeleteApplication(applicationId) {
@@ -108,9 +121,9 @@ function App() {
   }
 
   async function handleExportJSON() {
-    const fileInputName = prompt("Enter a filename for your export:", "job_applications");
-    if (fileInputName === null) return;
-    const filename = fileInputName.trim() || "job_applications";
+    const requestedFileName = prompt("Enter a filename for your export:", DEFAULT_EXPORT_FILENAME);
+    if (requestedFileName === null) return;
+    const filename = requestedFileName.trim() || DEFAULT_EXPORT_FILENAME;
     const downloadUrl = `${API_BASE_URL}/applications/export/json?filename=${encodeURIComponent(filename)}`;
     const link = document.createElement("a");
     link.href = downloadUrl;
@@ -139,11 +152,12 @@ function App() {
                 fetch(localDBApplications)
                     .then(res => res.json())
                     .then(data => setApplications(data));
-            } else {
+                setTimeout(() => {
+                    setImportMessage("");
+                }, 5000);
+             } else {
                 setImportMessage(data.detail);
-                setTimeout(5000);
-                setImportMessage("");
-            }
+           }
         } catch (error) {
             setImportMessage(`Import failed due to ${error}. Please try again.`);
         }

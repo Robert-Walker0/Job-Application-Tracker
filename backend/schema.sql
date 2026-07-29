@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS job_applications(
     pay_amount REAL NOT NULL,
     resume_name TEXT,
     notes TEXT,
-    status TEXT NOT NULL DEFAULT 'Applied',
+    status TEXT NOT NULL DEFAULT 'Applied' CHECK(status IN ('Applied', 'Phone Screen', 'Interview', 'Offer', 'Rejected', 'Withdrawn')),
     last_heard_from TEXT
 );
 

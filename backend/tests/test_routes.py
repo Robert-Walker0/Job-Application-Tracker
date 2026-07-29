@@ -312,7 +312,7 @@ def test_delete_application_success():
 
     response = client.delete(f"{APPLICATIONS_URL}/{application_id}")
 
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_200_OK
     assert response.json()["id"] == application_id
 
 
@@ -331,7 +331,7 @@ def test_delete_all_applications():
     assert all("id" in response.json() for response in create_response)
 
     delete_response = client.delete(f"{APPLICATIONS_URL}/all")
-    assert delete_response.status_code == status.HTTP_204_NO_CONTENT
+    assert delete_response.status_code == status.HTTP_200_OK
     response = client.get(APPLICATIONS_URL)
 
     assert response.status_code == status.HTTP_200_OK
@@ -346,7 +346,7 @@ def test_delete_all_applications_then_404_on_old_id():
     application_ids = [r.json()["id"] for r in create_responses]
 
     delete_response = client.delete(f"{APPLICATIONS_URL}/all")
-    assert delete_response.status_code == status.HTTP_204_NO_CONTENT
+    assert delete_response.status_code == status.HTTP_200_OK
 
     for application_id in application_ids:
         response = client.get(f"{APPLICATIONS_URL}/{application_id}")
@@ -368,9 +368,42 @@ def test_delete_application_removes_rounds_and_history_via_cascade():
     assert len(history_before.json()) > 0
 
     delete_response = client.delete(f"{APPLICATIONS_URL}/{application_id}")
-    assert delete_response.status_code == status.HTTP_204_NO_CONTENT
+    assert delete_response.status_code == status.HTTP_200_OK
 
     rounds_after = client.get(f"{APPLICATIONS_URL}/{application_id}/interview-rounds")
     history_after = client.get(f"{APPLICATIONS_URL}/{application_id}/history")
     assert rounds_after.status_code == status.HTTP_404_NOT_FOUND
     assert history_after.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_export_then_import_preserves_interview_rounds():
+    create_response = client.post(APPLICATIONS_URL, json=VALID_APPLICATIONS[0])
+    application_id = create_response.json()["id"]
+
+    client.post(
+        f"{APPLICATIONS_URL}/{application_id}/interview-rounds",
+        json={
+            "roundLabel": "Phone Screen",
+            "roundDate": "2026-07-20",
+            "notes": "Went well",
+        },
+    )
+
+    export_response = client.get(EXPORT_URL)
+    exported_data = export_response.json()
+    assert len(exported_data[0]["round"]) == 1
+
+    client.delete(f"{APPLICATIONS_URL}/all")
+
+    import_response = client.post(
+        IMPORT_URL,
+        files=utility_functions.make_json_file(exported_data),
+    )
+    assert import_response.status_code == status.HTTP_201_CREATED
+    assert "1 imported" in import_response.json()["message"]
+
+    new_applications = database.get_all_job_applications()
+    print(new_applications)
+    new_rounds = database.get_interview_rounds(new_applications[0]["id"])
+    assert len(new_rounds) == 1
+    assert new_rounds[0]["round_label"] == "Phone Screen"

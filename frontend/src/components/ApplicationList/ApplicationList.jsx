@@ -13,7 +13,6 @@ export default function ApplicationList({
     return (
         <div
             className="application-table-container"
-            // Close the menu if the user clicks elsewhere.
             onClick={() => setContextMenu(null)}
         >
             <h2>Current Tracked Applications ({applications.length})</h2>
@@ -93,14 +92,7 @@ export default function ApplicationList({
                 >
                     <button
                         onClick={() => {
-                            const confirmed = window.confirm(
-                                "Are you sure you want to delete this application?"
-                            );
-
-                            if (confirmed) {
-                                onDelete(contextMenu.application.id);
-                            }
-
+                            onDelete(contextMenu.application.id);
                             setContextMenu(null);
                         }}
                     >

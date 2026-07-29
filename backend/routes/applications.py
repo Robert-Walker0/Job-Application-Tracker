@@ -2,7 +2,9 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, status
 from fastapi.responses import JSONResponse
 from utility_functions import to_camel_case_dict
 from models import JobApplication, JobApplicationUpdate, InterviewRound
-import json, database, services
+import json
+import database
+import services
 
 router = APIRouter()
 
@@ -12,9 +14,8 @@ def root() -> JSONResponse:
     """Gets the root REST API of the application.
 
     Returns:
-        JSONResponse: The application status code of 200 to signal that
-        root of the application is working correctly. Along with content
-        about what the API is about.
+        JSONResponse: Status 200 confirming the API is running, with a
+            short message describing what the API is.
     """
     return JSONResponse(
         status_code=status.HTTP_200_OK,
@@ -35,32 +36,34 @@ def get_application(application_id: int) -> dict:
 
 @router.get("/applications")
 def get_applications() -> list:
-    """Gets all of the applications and converts them into a list.
+    """Gets all job applications.
 
     Returns:
-        list: A list of all the applications.
+        list: All applications, camelCase-converted. Empty list if none exist.
     """
-    applications = database.get_all_job_applications()
+    try:
+        applications = database.get_all_job_applications()
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(error)
+        )
     return [to_camel_case_dict(app) for app in applications]
 
 
 @router.get("/applications/export/json")
-def export_applications_json(filename: str = "job_applications"):
-    """Exports all of the current job applications from the database.
-
-    Collects all the current job applications from the database and
-    converts them into a list JSON format for downloading.
+def export_applications_json(filename: str = "job_applications") -> JSONResponse:
+    """Exports all job applications as a downloadable JSON file.
 
     Args:
-        filename (str): The filename that will be used for the user when downloading the file.
+        filename (str): The filename to use for the downloaded file,
+            without extension. Defaults to "job_applications".
 
     Returns:
-        JSONResponse: A JSON response of the job applications in a list along with the processing
-        data on how to download it, notes on json file type and how the content is being received
-        by the browser.
+        JSONResponse: The applications as a JSON list, with headers set to
+            trigger a browser download.
 
     Raises:
-        HTTPException 404: If no job applications are available to be exported to download.
+        HTTPException 404: If there are no applications to export.
     """
     applications = database.get_all_job_applications()
 
@@ -70,11 +73,7 @@ def export_applications_json(filename: str = "job_applications"):
             detail="No job applications found to export.",
         )
 
-    export_data = []
-    for app in applications:
-        converted = to_camel_case_dict(app)
-        converted["history"] = database.get_application_logs(app["id"])
-        export_data.append(converted)
+    export_data = [services.build_export_record(app) for app in applications]
 
     return JSONResponse(
         content=export_data,
@@ -84,23 +83,24 @@ def export_applications_json(filename: str = "job_applications"):
 
 
 @router.post("/applications/import/json")
-async def import_applications_json(file: UploadFile = File(...)):
-    """Imports job application only in JSON file format.
+async def import_applications_json(file: UploadFile = File(...)) -> JSONResponse:
+    """Imports job applications from an uploaded JSON file.
 
-    Ensures that any files are not json files, invalid json, or
-    have invalid structure are rejected imports.
+    Bad or malformed individual records are skipped and counted as failed
+    rather than aborting the whole import — see
+    services.process_application_import.
 
     Args:
-        file (UploadFile): The file being processed for the import. Defaults to a File.
+        file (UploadFile): The uploaded .json file containing a list of
+            application records.
 
     Returns:
-        JSONResponse: A successful status code 201 for posting one or multiple
-        job applications onto the server. The extra data included the message
-        goes over how many success imports were completed and how many failed.
+        JSONResponse: Status 201 with a summary of how many records were
+            imported successfully versus failed.
 
     Raises:
-        HTTPException 400: If the file received is not JSON format, invalid JSON file, or is not in list format of applications.
-
+        HTTPException 400: If the file isn't a .json file, isn't valid
+            JSON, or isn't structured as a list.
     """
     if not file.filename.endswith(".json"):
         raise HTTPException(
@@ -123,7 +123,7 @@ async def import_applications_json(file: UploadFile = File(...)):
             detail="Invalid file structure. Expected a list of applications.",
         )
 
-    imported_count, failed_count = services.process_application_import(
+    imported_count, failed_count = services.process_application_imports(
         applications_data
     )
 
@@ -137,19 +137,17 @@ async def import_applications_json(file: UploadFile = File(...)):
 
 @router.post("/applications")
 def create_application(application: JobApplication) -> JSONResponse:
-    """Creates a job application
+    """Creates a new job application.
 
     Args:
-        application (JobApplication): The job application form with its data.
+        application (JobApplication): The application data to create.
 
     Returns:
-        JSONResponse: A successful status code of 201 for creating a
-        new job application on the server. In the response as extra data is a message
-        stating that the job application was created successfully along with
-        its new id.
+        JSONResponse: Status 201 with a confirmation message and the new
+            application's ID.
 
     Raises:
-        HTTPException 500: If the server had an error that prevented the creation of a job application.
+        HTTPException 500: If the application fails to be created.
     """
     try:
         new_id = database.add_job_application(tuple(application.model_dump().values()))
@@ -168,20 +166,18 @@ def create_application(application: JobApplication) -> JSONResponse:
 def create_interview_round(
     application_id: int, round_data: InterviewRound
 ) -> JSONResponse:
-    """Creates an interview round.
+    """Creates a new interview round for an application.
 
     Args:
-        application_id (int):
-        round_data (InterviewRound):
+        application_id (int): The ID of the application this round belongs to.
+        round_data (InterviewRound): The round's label, date, and optional notes.
 
     Returns:
-        JSONResponse: A successful status code of 201 for creating a
-        new interview round on the server. In the response as extra data is a message
-        stating that the interview round was created successfully along with
-        its new id.
+        JSONResponse: Status 201 with a confirmation message and the new
+            round's ID.
 
     Raises:
-        HTTPException 500: If there was a server error with creating a interview round.
+        HTTPException 500: If the round fails to be created.
     """
     try:
         new_id = database.add_interview_round(
@@ -203,19 +199,18 @@ def create_interview_round(
 
 @router.get("/applications/{application_id}/interview-rounds")
 def get_interview_rounds(application_id: int) -> list:
-    """Fetches the interview rounds for a specific job application.
+    """Fetches all interview rounds for an application.
 
     Args:
-        application_id (int): The job application id
+        application_id (int): The ID of the application whose rounds to fetch.
 
     Returns:
-        list: Returns a list of rounds for that job application.
+        list: The application's interview rounds, camelCase-converted.
 
     Raises:
-        HTTPExceptoin 400: If the application for the rounds couldn't be found.
-        HTTPException 500: If the rounds couldn't be fetched from the server.
+        HTTPException 404: If the application does not exist.
+        HTTPException 500: If the rounds fail to be fetched.
     """
-
     try:
         rounds = database.get_interview_rounds(application_id)
     except ValueError as error:
@@ -229,23 +224,23 @@ def get_interview_rounds(application_id: int) -> list:
 
 @router.get("/applications/{application_id}/history")
 def get_application_history(application_id: int) -> list:
-    """Gathers the history an existing job application.
+    """Fetches the change history for an application.
 
     Args:
-        application_id (int): The job application id
+        application_id (int): The ID of the application whose history to fetch.
 
     Returns:
-        list: A list of the logs messaages for that job application.
+        list: The application's log entries.
 
     Raises:
-        HTTPExceptoin 400: If application does not exist.
-        HTTPException 500: If the application was failed to be fetched from the server.
+        HTTPException 404: If the application does not exist.
+        HTTPException 500: If the history fails to be fetched.
     """
     try:
         logs = database.get_application_logs(application_id)
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
-    except Exception as error:
+    except RuntimeError as error:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch application history: {str(error)}",
@@ -261,18 +256,18 @@ def update_job_application_by_id(
 
     Args:
         application_id (int): The ID of the application to update.
-        application (JobApplicationUpdate): The Job Application Update Model to use to update.
+        application (JobApplicationUpdate): The fields to update; unset
+            fields are excluded and left unchanged.
 
     Returns:
-        dict: The updated application data.
+        dict: The updated application, camelCase-converted.
 
     Raises:
-        HTTPException 404: If application not found.
-        HTTPException 500: If database update fails.
+        HTTPException 400: If no fields were provided to update.
+        HTTPException 404: If the application does not exist.
+        HTTPException 500: If the update fails.
     """
-    updated_fields = {
-        key: value for key, value in application.model_dump(exclude_none=True).items()
-    }
+    updated_fields = application.model_dump(exclude_none=True)
 
     if not updated_fields:
         raise HTTPException(
@@ -298,15 +293,13 @@ def update_job_application_by_id(
 def delete_all_job_applications():
     try:
         deleted_count = database.delete_all_job_applications()
-    except ValueError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error))
     except RuntimeError as error:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(error)
         )
 
     return JSONResponse(
-        status_code=status.HTTP_204_NO_CONTENT,
+        status_code=status.HTTP_200_OK,
         content={
             "message": "All applications deleted successfully.",
             "count": deleted_count,
@@ -326,6 +319,6 @@ def delete_job_application_by_id(application_id: int) -> JSONResponse:
         )
 
     return JSONResponse(
-        status_code=status.HTTP_204_NO_CONTENT,
+        status_code=status.HTTP_200_OK,
         content={"message": "Application deleted successfully.", "id": deleted_id},
     )
