@@ -16,16 +16,10 @@
 
 
 ### Adding Applications
-![Add Applications](docs/gifs/add-applciations.gif)
+![Add Applications](docs/gifs/adding.gif)
 
 ### Editing Applications
-![Edit Application](docs/gifs/edit-application.gif)
-
-### Filtering Applications
-![Filter Demo](docs/gifs/filter.gif)
-
-### Export / Import
-![Export/Import](docs/gif/export-import.gif)
+![Edit Application](docs/gifs/editing.gif)
 
 
 
