@@ -130,11 +130,21 @@ During this project, I learned these new things to help me become a better devel
 
 ## Running the Project
 
-### Requirements
+### Option 1: Docker (Recommended)
 
-Ensure you have Node.js and Python 3.11 or higher installed before proceeding.
+Requirements:
+- Docker Desktop
 
-### Locally
+Start the application:
+```bash
+docker compose up --build
+```
+
+### Option 2: Manual
+
+Requirements: 
+- Node.js v24.16.0 or higher
+- Python 3.13.12 or higher
 
 You need to set up the backend and frontend servers to run the application.
 
