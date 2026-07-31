@@ -8,6 +8,7 @@
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=flat-square&logo=react&logoColor=%2361DAFB)
 ![Pytest](https://img.shields.io/badge/Pytest-0A9EDC?style=flat&logo=pytest&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat&logo=vitest&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%232496ED.svg?style=flat-square&logo=docker&logoColor=white)
 
 ## Demo 
 
@@ -38,6 +39,7 @@ This tracker allows you to track the company, role, work type, location, applica
 * PyTest
 * Vitest
 * Render
+* Docker
 
 ## Features
 
